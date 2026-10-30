@@ -1,0 +1,209 @@
+{
+  "files": [
+    {
+      "file": "index.html",
+      "bytes": 62847,
+      "sha256": "e96b36696323880c6b35a71ac40d23a8e84365c09fd85cc68d1c1b11588d6fc6"
+    },
+    {
+      "file": "style.css",
+      "bytes": 73294,
+      "sha256": "23b3a0d116874c9dab44bd70adce097409a5ab7e91859772f9d31d5eeea1640d"
+    },
+    {
+      "file": "candidate-lists.js",
+      "bytes": 8660,
+      "sha256": "2c9e3e7ec84d44464ff5e7834b5fc4f9dcba4d7538e2f509ffec3a6eac64d826"
+    },
+    {
+      "file": "ui-details.js",
+      "bytes": 3171,
+      "sha256": "84411ce23f7a674e776bcbd03ea364cdf00db5349359ac63599c95d5d8a4b49b"
+    },
+    {
+      "file": "media-reporting.js",
+      "bytes": 7141,
+      "sha256": "88bde3191e5318818058db83ddaa77bc00b19e240f59339c275dc5c06c0d0edb"
+    },
+    {
+      "file": "brochure-data.js",
+      "bytes": 196947,
+      "sha256": "ee9eb997ce333f8a9e461957e1fdf7e5bb5d603b11601bc0943d62814d545289"
+    },
+    {
+      "file": "brochure.js",
+      "bytes": 4543,
+      "sha256": "5c1185703f12037c8b3770777dbba1f606195e50baa9edfd1f30408786fc7eea"
+    },
+    {
+      "file": "candidates.js",
+      "bytes": 45058,
+      "sha256": "beea4dde155573c3c6350bc9de2463b08afe9a02099f083b495a547540162126"
+    },
+    {
+      "file": "campaign.js",
+      "bytes": 20800,
+      "sha256": "3d9168ace7cac0b646f695caea44a05d532b2aca49b90957f6d3e9e877097a91"
+    },
+    {
+      "file": "election-day.js",
+      "bytes": 26854,
+      "sha256": "ad3eae27cfb7980140e6784c766ac3959d887ec0f312870e2eed3982df707d36"
+    },
+    {
+      "file": "assembly-allocation.js",
+      "bytes": 20204,
+      "sha256": "179fd7c99ba7bdc46a69dbd9137149d5efad704e3d3a2cfa55d148d5730c62c6"
+    },
+    {
+      "file": "assembly-publication.js",
+      "bytes": 27468,
+      "sha256": "06cb90f546c76844f552d93e212a572f0f91c8f356ee7c068dd88810e721d485"
+    },
+    {
+      "file": "constituent-session.js",
+      "bytes": 40452,
+      "sha256": "f574722224e73e51c6363f1ca8a5a27bed1f58bd0c4e91f0d2ba32404fdc1c15"
+    },
+    {
+      "file": "election-access.js",
+      "bytes": 2230,
+      "sha256": "03a7db95b9778ab9fcfdf4561249bf5fdc29a37d1f6cc72bc9b517f3ae9dfa07"
+    },
+    {
+      "file": "deputy-mandates.js",
+      "bytes": 23607,
+      "sha256": "62a4912ba70184ad16f3267d494946f35104c064838c25841d3981bc0eb02cdb"
+    },
+    {
+      "file": "international-diplomacy.js",
+      "bytes": 51718,
+      "sha256": "f9147f7f3a5904beabedd079df09efac9c93e7d00df34e669eea9de667df79f2"
+    },
+    {
+      "file": "agreement-documents.js",
+      "bytes": 42270,
+      "sha256": "9a04b4fe9d10a79217d3a0cc62d83e4f5d7fb3a1847d7a0df43bad46e035fbe1"
+    },
+    {
+      "file": "diplomatic-report.js",
+      "bytes": 20944,
+      "sha256": "aed1e77d32ce5bc619c9a4fed71fb10b592e35064800ad0ebd965c9c30ffcddf"
+    },
+    {
+      "file": "meeting-visuals.js",
+      "bytes": 22322,
+      "sha256": "307198227f3c699854c0ae2349f6dcc5a4084974c4772c54b8aecce89abfbae5"
+    },
+    {
+      "file": "state-calendar.js",
+      "bytes": 29517,
+      "sha256": "8a9dc3eee50e5fbc8bedc08c552ed1dcf76e65759a325b7ff3607486012d15be"
+    },
+    {
+      "file": "municipal-development.js",
+      "bytes": 48886,
+      "sha256": "83e823bf370451f43148d0bd2fb147944e9eb55223755a06186244c11ca70f96"
+    },
+    {
+      "file": "state-development.js",
+      "bytes": 37900,
+      "sha256": "79f11e47e936dff8458e60db274c0785255a3396a9bcb5fe9a64bc11a3f0e5d6"
+    },
+    {
+      "file": "catalog-view.js",
+      "bytes": 6744,
+      "sha256": "da2e63677723158bd98fb9928bb5b2bd557d457548f243d5ccf63de0cec6eb4c"
+    },
+    {
+      "file": "urgent-situations.js",
+      "bytes": 10639,
+      "sha256": "af35dc3eaa879d40ea2a7c3939f68960d27d94acba02910b96ba177b5cee70fe"
+    },
+    {
+      "file": "election-preparation.js",
+      "bytes": 12338,
+      "sha256": "4c17d18f3fb8555ab7741239668225a453711161e8ed9359f7c9adbd0d2502f7"
+    },
+    {
+      "file": "election-counting.js",
+      "bytes": 18856,
+      "sha256": "8988f76024caa19f1acc36b71b8f546e81c9470c3ea5b3703f4781040e3d6bd6"
+    },
+    {
+      "file": "public-support.js",
+      "bytes": 5126,
+      "sha256": "36763ec44ccfd3dca90a47de2f323d47bb7094ced0f90ad2d4e716486604c3b6"
+    },
+    {
+      "file": "political-roles.js",
+      "bytes": 12121,
+      "sha256": "3096bf681a9a05fde56161b220957c48266a1959e88fec6bf6939e8b4aeefb15"
+    },
+    {
+      "file": "presidency.js",
+      "bytes": 20570,
+      "sha256": "f771d5f9ff419c8c9ca7e80028a7ef8645ffd92cfa48ffed5b32288a73f53622"
+    },
+    {
+      "file": "economic-pilot.js",
+      "bytes": 53990,
+      "sha256": "8e386b51dac7d0bd0d2fb4015a781e2329d1060cf8a79d09395f6347b7579520"
+    },
+    {
+      "file": "public-finance.js",
+      "bytes": 50144,
+      "sha256": "8da3dd725c84d7bc4e5f2f3aa574e9ef2bb6be6e8d4625ac0b137564d66c4d0b"
+    },
+    {
+      "file": "finance-extension.js",
+      "bytes": 19078,
+      "sha256": "015054fa4bc33f3ffe61fcec729aaaa56d2a8430a6b0e896d75d0c314a56a21d"
+    },
+    {
+      "file": "weekly-agenda.js",
+      "bytes": 18497,
+      "sha256": "bd17c3653531ef7f09045b5bb2f110282c2ed1eca8e9821fb17b7af1bb1a2f5e"
+    },
+    {
+      "file": "law-negotiations.js",
+      "bytes": 36755,
+      "sha256": "dc5032a71a01fd20c9af387b46051bada3fea8e9c7eba3352d920155051b8be0"
+    },
+    {
+      "file": "script.js",
+      "bytes": 524926,
+      "sha256": "1ab0b9a3b204816aca45dfd441c0fd6501f2b6f6f6b3b36892e6fc48a27ba887"
+    },
+    {
+      "file": "sector-laws.js",
+      "bytes": 22585,
+      "sha256": "b2ade263f6403c897c15b820204ea61093cf13c38c9bd4b6c89ebd550354fb41"
+    },
+    {
+      "file": "ux-guidance.js",
+      "bytes": 15130,
+      "sha256": "464dea34e78b98315b1d7a748793475a7e93b1df2ce0e43633682036a9b31332"
+    },
+    {
+      "file": "mandate-experience.js",
+      "bytes": 8527,
+      "sha256": "c959bdb9e7358295d3c5a607775c16f43feb27b78f23ed26df78e0d3170e929c"
+    },
+    {
+      "file": "data/143_Broshura_alsr.pdf",
+      "bytes": 488359,
+      "sha256": "4a0053f8e2a9b5ff72e323c884c3422e0f55df1ea777d1fc1a164d30212c3887"
+    },
+    {
+      "file": "data/ligji-08-L-228.pdf",
+      "bytes": 440914,
+      "sha256": "de0e2e0794c4524cd2328cfd27d20dd722c34e1c5c327e359e13600c688940c8"
+    }
+  ],
+  "missingImages": [
+    "images/kuvendi.jpg",
+    "images/qeveria.jpg",
+    "images/konferenca.jpg"
+  ]
+}
