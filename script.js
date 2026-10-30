@@ -2020,6 +2020,11 @@ function validateLoadedState(st) {
     validatePoliticalScenes(st);
     validateWeekCalendar(st);
     if(typeof validateMandateExperience==='function')validateMandateExperience(st);
+    if(typeof validateConstitutionDarkPolitics==='function')validateConstitutionDarkPolitics(st);
+    if(typeof validateBilateralTrade==='function')validateBilateralTrade(st);
+    if(typeof validateStreetProtests==='function')validateStreetProtests(st);
+    if(typeof validateSecurityOps==='function')validateSecurityOps(st);
+    if(typeof validateForeignInvestments==='function')validateForeignInvestments(st);
     validateWeeklyAgenda(st);
     validateLawNegotiations(st);
     validatePublicSupport(st);
@@ -2183,6 +2188,8 @@ function startScenarioWithParty(partyKey) {
     var mode = modeRadio ? modeRadio.value : "REALITY_OCT2026";
     state = createFreshState(mode, partyKey);
     initializeMandateExperience(state);
+    initializeConstitutionPolitics(state);
+    initializeStreetProtests(state);
     clearInterval(votingAnimInterval);
     currentVotingData = null;
     _voteInProgress = false;
@@ -2200,6 +2207,8 @@ function startCustomParty() {
     var modeRadio = document.querySelector('input[name="gameMode"]:checked');
     var mode = modeRadio ? modeRadio.value : "ALT_POST_ELECTION";
     state = createFreshState(mode, "LVV", { partyName: pName, leaderName: lName });
+    initializeStreetProtests(state);
+    initializeConstitutionPolitics(state);
     initializeMandateExperience(state);
     clearInterval(votingAnimInterval);
     currentVotingData = null;
@@ -2307,6 +2316,7 @@ function updateTopBar() {
    ============================================================================ */
 function refreshAllUI() {
     if (!state) return;
+    var securityTab=['war','intelligence','investments'].find(function(key){return document.getElementById('gov-'+key)?.style.display==='block';});
     fiscalSyncBudgetStatuses();
     updateTopBar();
     if (typeof renderDashboard === "function") renderDashboard();
@@ -2332,6 +2342,12 @@ function refreshAllUI() {
     renderUrgentSituations();
     saveGameAuto();
     if(typeof renderMandateExperience==='function')renderMandateExperience();
+    if(typeof renderConstitutionPolitics==='function')renderConstitutionPolitics();
+    if(typeof renderBilateralTrade==='function')renderBilateralTrade();
+    if(typeof renderStreetProtests==='function')renderStreetProtests();
+    if(typeof renderSecurityOps==='function')renderSecurityOps();
+    if(typeof renderForeignInvestments==='function')renderForeignInvestments();
+    if(securityTab){var securityPill=Array.from(document.querySelectorAll('#tab-government .sub-pill')).find(function(button){return button.getAttribute('onclick')?.includes("'"+securityTab+"'");});if(securityPill)switchSubTab('gov',securityTab,securityPill);}
     if(typeof uiEnhanceDetails==='function')uiEnhanceDetails(document);
 }
 
@@ -4614,6 +4630,7 @@ function getBillStatusTagClass(status) {
 
 function getMajorityLabel(law) {
     if (!law) return "";
+    if (law.majorityType === "CONSTITUTION_80") return "Ndryshim kushtetues · 2/3 (80/120 vota)";
     if (law.majorityType === "INTL_80") return "2/3 (80/120 vota)";
     if (law.majorityType === "VITAL_DOUBLE") return "Shumicë e Dyfishtë (61+ & 14/20 Komunitetet)";
     return "Shumicë e Thjeshtë (61+ vota)";
@@ -4621,6 +4638,7 @@ function getMajorityLabel(law) {
 
 function getMajorityBadgeClass(law) {
     if (!law) return "";
+    if (law.majorityType === "CONSTITUTION_80") return "two-thirds";
     if (law.majorityType === "INTL_80") return "two-thirds";
     if (law.majorityType === "VITAL_DOUBLE") return "vital";
     return "";
@@ -5139,6 +5157,7 @@ function deleteDraftBill(idx) {
     var law = state.laws[idx];
     if (!law || law.status !== "DRAFT") return;
     if(law.internationalAgreementId){showToast("Akti i marrëveshjes ruhet në arkiv; përdorni procedurën e dokumentit.");return false;}
+    if(state.darkPolitics?.deals.some(function(d){return d.lawId===law.id;}))return catalogWithdraw(idx);
     if(law.annualBudgetYear)return catalogWithdraw(idx);
     state.laws.splice(idx, 1);
     refreshAllUI();
@@ -5236,17 +5255,21 @@ function calculateLawVote(law, forecast) {
             }
         }
         ballot = negotiatedLawBallot(law, mp, ballot, forecast, random);
+        if(typeof darkPoliticalBallot==='function')ballot=darkPoliticalBallot(law,mp,ballot);
         result[ballot]++;
         if (ballot === "pro" && (mp.party === "MIN_MULTI" || mp.party === "SL")) result.minorityYes++;
         result.ballots.push({ seatNumber: mp.seatNumber, vote: ballot,
             consumePromise: !partyInCoalition && mp.promisedVoteNext === true });
     });
-    result.passed = law.majorityType === "INTL_80" ? result.pro >= 80 :
+    result.passed = ['INTL_80','CONSTITUTION_80'].includes(law.majorityType) ? result.pro >= 80 :
         law.majorityType === "VITAL_DOUBLE" ? result.pro >= 61 && result.minorityYes >= 14 : result.pro >= 61;
+    if(typeof constitutionalBlockReason==='function'){var blocked=constitutionalBlockReason(law,state);if(blocked){result.blockedReason=blocked;result.passed=false;}}
     return result;
 }
 
 function finalizeLawVote(law, result, sessionId) {
+    if(typeof constitutionalBlockReason==='function' && constitutionalBlockReason(law,state)){showToast(constitutionalBlockReason(law,state));return false;}
+    if(law?.constitutionChange && (!_committingVote || !state.pendingVote || law.status!=='SCHEDULED' || law.majorityType!=='CONSTITUTION_80' || result.passed && result.pro<80))return false;
     if(law?.annualBudgetYear && (!_committingVote || !state.pendingVote || law.status!=='SCHEDULED')){showToast('Projektbuxheti miratohet vetëm përmes votimit të seancës.');return false;}
     if (!assertAssemblyFunctional("Miratimi i ligjit")) return false;
     if (law.status === "PASSED" || law.status === "FAILED") return false;
@@ -5263,13 +5286,15 @@ function finalizeLawVote(law, result, sessionId) {
     law.voteHistory.push({ week: state.turnCount, pro: result.pro, kunder: result.kunder,
         abstenim: result.abstenim, mungese: result.mungese, minorityYes: result.minorityYes, passed: result.passed });
     law.status = result.passed ? "PASSED" : "FAILED";
+    if(typeof consumeDarkPoliticalVotes==='function')consumeDarkPoliticalVotes(law);
     law.stage = result.passed ? "Ligj i miratuar" : "I Rrëzuar në Votim";
     if (!result.passed) law.failureReason = "Nuk u arrit pragu i votave sipas rregullit të simulimit.";
     law.stageHistory = law.stageHistory || [];
     law.stageHistory.push({ stage: law.status, week: state.turnCount });
     fiscalAnnualBudgetResult(law,result);
     if (result.passed && !law.applied) { law.applied = true; applyLawEffects(law); }
-    addMediaNews(result.passed ? "Kuvendi Live" : "KOHA", law.title + (result.passed?': miratohet në Kuvend':': nuk merr votat e nevojshme'), result.passed ? "POSITIVE" : "CRITICAL",null,null,{kind:'VOTE',title:law.title,passed:result.passed,pro:result.pro,against:result.kunder,abstain:result.abstenim,absent:result.mungese,required:law.majorityType==='INTL_80'?80:61,vital:law.majorityType==='VITAL_DOUBLE',minorityYes:result.minorityYes});
+    if(result.passed && typeof considerStreetLawProtest==='function')considerStreetLawProtest(law);
+    addMediaNews(result.passed ? "Kuvendi Live" : "KOHA", law.title + (result.passed?': miratohet në Kuvend':': nuk merr votat e nevojshme'), result.passed ? "POSITIVE" : "CRITICAL",null,null,{kind:'VOTE',title:law.title,passed:result.passed,pro:result.pro,against:result.kunder,abstain:result.abstenim,absent:result.mungese,required:['INTL_80','CONSTITUTION_80'].includes(law.majorityType)?80:61,vital:law.majorityType==='VITAL_DOUBLE',minorityYes:result.minorityYes});
     state.historyLog.unshift(MONTHS_SQ[state.monthIndex] + " " + state.year + " [Kuvend]: " + law.title + ": " + law.lastVoteResult);
     var session = (state.parliamentarySessions || []).find(function(item) { return item.id === sessionId; });
     if (session) session.results.push({ billId: law.id, title: law.title, status: law.status, resultText: law.lastVoteResult });
@@ -5278,6 +5303,7 @@ function finalizeLawVote(law, result, sessionId) {
 }
 
 function beginLawVote(law, continuation) {
+    if(typeof constitutionalBlockReason==='function' && constitutionalBlockReason(law,state)){showToast(constitutionalBlockReason(law,state));return false;}
     if(law && !law.annualBudgetYear && !law.internationalAgreementId && law.costB>0){var authorization=fiscalSpendingCheck(law.costB,false);if(!authorization.allowed){showToast(authorization.message);return false;}}
     if(law?.annualBudgetYear && state.publicFinance.budgets[law.annualBudgetYear]?.lawId!==law.id){showToast('Kjo nuk është paraqitja aktive e projektbuxhetit.');return false;}
     if(law?.catalogId==='cat_budget_2027' && !law.annualBudgetYear && state.publicFinance.budgets[2027]?.status==='APPROVED'){showToast('Buxheti i vitit 2027 është tashmë i miratuar; nuk përsëritet pagesa ose votimi.');return false;}
@@ -5312,6 +5338,7 @@ function voteLawInAssembly(lawIdx) {
 }
 
 function applyLawEffects(law) {
+    if(law.constitutionChange){applyConstitutionChange(law);return;}
     if(law.annualBudgetYear)return;
     if (!law.internationalAgreementId) { startCatalogImplementation(law); return; }
     if (law.applied !== true) return;
@@ -6996,6 +7023,7 @@ function processDevelopmentWeek() {
 
     state.developmentProjects.forEach(function(p) {
         if (p.status === "IN_PROGRESS") {
+            if(typeof streetSectorBlocked==='function' && streetSectorBlocked(p.sectorId,state.turnCount,state))return;
             if(p.createdWeek>=state.turnCount)return;
             if(p.lastFiscalProgressTurn===state.turnCount)return;
             ensureProjectEffectComponents(p);
@@ -7726,6 +7754,7 @@ function processExistingTimeAdvance(weeksCount, silentToast) {
             }
         }
 
+        if(typeof processBilateralTradeWeek==='function')processBilateralTradeWeek(state.turnCount);
         processWeeklyFiscalReport(state.turnCount);
         processInternationalDiplomacyWeek();
         processDevelopmentWeek();
@@ -7758,7 +7787,7 @@ function processExistingTimeAdvance(weeksCount, silentToast) {
         });
 
         (state.stateSectors || []).forEach(function(sec) {
-            if (sec.active && sec.weeksLeft > 0) {
+            if (sec.active && sec.weeksLeft > 0 && !(typeof streetSectorBlocked==='function' && streetSectorBlocked(sec.id,state.turnCount,state))) {
                 sec.weeksLeft--;
                 if (sec.weeksLeft === 0) {
                     sec.active = false;
@@ -7779,6 +7808,7 @@ function processExistingTimeAdvance(weeksCount, silentToast) {
             if (!m.projects) return;
             m.projects.forEach(function(pr) {
                 if (pr.status !== "I Përfunduar") {
+                    if(typeof streetSectorBlocked==='function' && streetSectorBlocked(pr.sectorId||pr.sector,state.turnCount,state))return;
                     pr.weeksLeft = Math.max(0, pr.weeksLeft - 1);
                     pr.progress = Math.min(100, Math.round(((pr.totalWeeks - pr.weeksLeft) / pr.totalWeeks) * 100));
                     if (pr.weeksLeft === 0) {
@@ -7819,6 +7849,9 @@ function processExistingTimeAdvance(weeksCount, silentToast) {
 
         processLawNegotiations();
         processWeeklyAgenda();
+        if(typeof processForeignInvestmentsWeek==='function')processForeignInvestmentsWeek(state.turnCount);
+        if(typeof processSecurityOpsWeek==='function')processSecurityOpsWeek(state.turnCount);
+        if(typeof processStreetProtestsWeek==='function')processStreetProtestsWeek(state.turnCount);
 
         if (state.scheduledMeetings) {
             state.scheduledMeetings.forEach(function(m) {
@@ -8036,6 +8069,7 @@ function openGovernmentCatalog() {
     switchMainTab('tab-catalog');
 }
 function catalogImplementationDetails(x) {
+    if(x.constitutionChange || x.constitutionalRequirement)return constitutionalBillDetails(x);
     if(x.legalEffectMode==='PROCEDURAL')return '<p>Akt normativ i skenarit. Miratimi nuk kryen pagesë dhe nuk shton pikë sektoriale. Masat praktike kërkojnë vendim, financim dhe afat në sistemin ekzistues. Nuk është simuluar hyrje në fuqi juridike reale ose çdo dispozitë e tekstit.</p>';
     if(x.annualBudgetYear)return fiscalAnnualBudgetDetails(x);
     var job=x.implementation || x;
@@ -8080,6 +8114,8 @@ function resubmitRejectedBill(i){
     try{
         var draft={id:'resubmitted:'+ (++state.billCounter),revisionOf:l.id,title:l.title,desc:l.desc,ministry:l.ministry,sector:l.sector,field:l.field,proposer:l.proposer,costB:l.costB,duration:l.duration,approvalEffect:l.approvalEffect || 0,status:'DRAFT',supportParties:[state.playerParty],stageHistory:[],voteHistory:[],applied:false};
         initializeCatalogBill(draft);draft.source='Dokument i simuluar — pa burim ligjor real të verifikuar';if(l.catalogId)draft.catalogId=l.catalogId;if(l.legalEffectMode==='PROCEDURAL')draft.legalEffectMode='PROCEDURAL';draft.govRequired=!!l.govRequired || draft.govRequired;draft.majorityType=l.majorityType || 'SIMPLE_61';draft.requiredVotes=l.requiredVotes || 61;
+        if(l.constitutionChange)draft.constitutionChange=JSON.parse(JSON.stringify(l.constitutionChange));
+        if(l.constitutionalRequirement)draft.constitutionalRequirement=JSON.parse(JSON.stringify(l.constitutionalRequirement));
         state.laws.unshift(draft);state.historyLog.unshift(state.year+' [Kuvend]: U riparaqit si draft '+draft.title+'. Votimi i mëparshëm ruhet.');
         if(!saveGameAuto())throw Error('Ruajtja dështoi.');
     }catch(e){state=JSON.parse(before);showToast(e.message);return false;}
@@ -8191,7 +8227,7 @@ function processGovernmentCatalogWeek() {
     var work=state.governmentCatalog.projects.filter(function(p){return !p.municipal14 && p.status==='ACTIVE';}).map(function(p){return {x:p,job:p};});
     state.laws.forEach(function(l){if(l.implementation && l.implementation.status==='ACTIVE')work.push({x:l,job:l.implementation});});
     work.forEach(function(item){var x=item.x,j=item.job;if(j.lastTurn>=state.turnCount)return;j.lastTurn=state.turnCount;
-        if(state.governmentFormed){var before=j.progress||0;j.elapsed++;j.progress=Math.min(100,j.elapsed/(x.duration||8)*100);var delta=(j.progress-before)/100;
+        if(state.governmentFormed && !(typeof streetSectorBlocked==='function' && streetSectorBlocked(x.sector,state.turnCount,state))){var before=j.progress||0;j.elapsed++;j.progress=Math.min(100,j.elapsed/(x.duration||8)*100);var delta=(j.progress-before)/100;
             var sector=state.stateSectors.find(function(s){return s.id===x.sector;});if(sector)sector.score=clamp(sector.score+8*delta,10,100);
             adjustPublicSupport((x.approvalEffect||0)*delta, {source:'implementation:'+x.id,sectorId:x.sector,implemented:true});
             if(j.progress===100)j.status='COMPLETED';

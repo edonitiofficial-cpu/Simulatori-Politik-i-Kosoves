@@ -2,13 +2,13 @@
   "files": [
     {
       "file": "index.html",
-      "bytes": 62847,
-      "sha256": "e96b36696323880c6b35a71ac40d23a8e84365c09fd85cc68d1c1b11588d6fc6"
+      "bytes": 65659,
+      "sha256": "f7cb48c68920b61d26a34a7c093a4d3c2ffb98baf4129a8153e750a0ec6c1839"
     },
     {
       "file": "style.css",
-      "bytes": 73294,
-      "sha256": "23b3a0d116874c9dab44bd70adce097409a5ab7e91859772f9d31d5eeea1640d"
+      "bytes": 75887,
+      "sha256": "84ec2ebc8ec1ffb0653842a7089d7eb216da2e2bb98fe7fd70e2790a53c3325c"
     },
     {
       "file": "candidate-lists.js",
@@ -97,13 +97,13 @@
     },
     {
       "file": "state-calendar.js",
-      "bytes": 29517,
-      "sha256": "8a9dc3eee50e5fbc8bedc08c552ed1dcf76e65759a325b7ff3607486012d15be"
+      "bytes": 30586,
+      "sha256": "260895b4d24782f185bb1c8005d1d42eceb1ed12144ea448c0d67ef1c4857ca5"
     },
     {
       "file": "municipal-development.js",
-      "bytes": 48886,
-      "sha256": "83e823bf370451f43148d0bd2fb147944e9eb55223755a06186244c11ca70f96"
+      "bytes": 49000,
+      "sha256": "ccacb8b7532dce99065aed9a1f55527f8cf028be70c821b631641d70f946a24a"
     },
     {
       "file": "state-development.js",
@@ -147,13 +147,13 @@
     },
     {
       "file": "economic-pilot.js",
-      "bytes": 53990,
-      "sha256": "8e386b51dac7d0bd0d2fb4015a781e2329d1060cf8a79d09395f6347b7579520"
+      "bytes": 64936,
+      "sha256": "540b1d475942b83eb9d1d7068c2354476277eb1071ad29490cc5d237eea78c20"
     },
     {
       "file": "public-finance.js",
-      "bytes": 50144,
-      "sha256": "8da3dd725c84d7bc4e5f2f3aa574e9ef2bb6be6e8d4625ac0b137564d66c4d0b"
+      "bytes": 50646,
+      "sha256": "06ea2b689ff99f7b52fef823d44e51bbf248584db13e2848623122d6f961015f"
     },
     {
       "file": "finance-extension.js",
@@ -167,13 +167,13 @@
     },
     {
       "file": "law-negotiations.js",
-      "bytes": 36755,
-      "sha256": "dc5032a71a01fd20c9af387b46051bada3fea8e9c7eba3352d920155051b8be0"
+      "bytes": 36803,
+      "sha256": "3f49c51678ee3d1cdd125b862ed69241f2dcacfbf7960104e05d51f67c8bda06"
     },
     {
       "file": "script.js",
-      "bytes": 524926,
-      "sha256": "1ab0b9a3b204816aca45dfd441c0fd6501f2b6f6f6b3b36892e6fc48a27ba887"
+      "bytes": 528826,
+      "sha256": "591fb684059288322dd6c78e66d52b3d7892e36449cc5d2fab1feecac261a86a"
     },
     {
       "file": "sector-laws.js",
@@ -199,6 +199,26 @@
       "file": "data/ligji-08-L-228.pdf",
       "bytes": 440914,
       "sha256": "de0e2e0794c4524cd2328cfd27d20dd722c34e1c5c327e359e13600c688940c8"
+    },
+    {
+      "file": "constitution-dark-politics.js",
+      "bytes": 18204,
+      "sha256": "a443cca3909988c50c0a918d21024b7d791831c1bd1a0c8afc385493cdb28741"
+    },
+    {
+      "file": "street-protests.js",
+      "bytes": 10690,
+      "sha256": "40ad6290b17108d319bf5f924510dc30473221822af04775b9fbcb5b354113f0"
+    },
+    {
+      "file": "security-ops.js",
+      "bytes": 11314,
+      "sha256": "cdf51d3b6ae8a7c49695cb97092f172ef42e8ff6162e41ef3ed934ac84c39cdb"
+    },
+    {
+      "file": "foreign-investments.js",
+      "bytes": 8893,
+      "sha256": "374bdd6f169c0713babc317ee104684d432d93c08e7eaff0cdcc3e9c540e0588"
     }
   ],
   "missingImages": [

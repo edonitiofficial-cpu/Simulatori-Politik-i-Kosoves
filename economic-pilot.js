@@ -5,6 +5,8 @@ const ECONOMIC_TAX_KEYS=['vat','incomeTax','corporateTax','customs'];
 const ECONOMIC_MARKET_DEFAULTS=Object.freeze({version:1,importLimit:0,exportLimit:0,importPrice:125});
 const PRODUCTIVE_DEFAULTS=Object.freeze({agricultureWeight:.25,energyIndustryWeight:.8,agricultureCapacityPerPoint:.008,agricultureCostSensitivity:.12,agricultureStep:1,productionCostShare:.6});
 const HOUSEHOLD_DEFAULTS=Object.freeze({incomeElasticity:.6,priceElasticity:.4,costPassThrough:.25});
+// Public strategic reserves use explicit units; never reinterpret private model units as tonnes.
+const BILATERAL_PRODUCTS={wheat:{name:'Grurë',unit:'ton',price:250,weeklyUse:10000},energy:{name:'Energji',unit:'MWh',price:100,weeklyUse:5000},steel:{name:'Çelik',unit:'ton',price:600,weeklyUse:1000},technology:{name:'Teknologji',unit:'njësi',price:1000,weeklyUse:500}};
 function householdEarnedIncome(employment,wage){return employment/100*wage/100;}
 function householdProductionCost(p,key,energyCost){var sensitivity=key==='industry'?p.config.costSensitivity:p.productive.config.agricultureCostSensitivity;return 100*Math.max(.25,1+sensitivity*(energyCost/100-1));}
 function enableHouseholdEconomy(){
@@ -25,6 +27,7 @@ function householdDemand(st,rates,employment,wage,energyCost){
     ['industry','agriculture'].forEach(function(k){
         var cost=householdProductionCost(p,k,energyCost)/h.referenceCosts[k];
         prices[k]=x.trade[k].unitValueB/h.referenceValues[k]*(1+h.config.costPassThrough*(cost-1))*(1+rates.vat/100)/(1+h.referenceVat/100);
+        prices[k]*=bilateralHouseholdPriceFactor(st,k);
         desired[k]=income>0?x.trade[k].demand*h.demandMultiplier*Math.pow(income,h.config.incomeElasticity)/Math.pow(prices[k],h.config.priceElasticity):0;
         desiredValue+=desired[k]*h.referenceValues[k]*prices[k];basketCost+=h.referenceDemands[k]*h.referenceValues[k]*prices[k];
     });
@@ -337,4 +340,50 @@ function setGoodsTrade(config){
     try{validateProductiveEconomy(probe);}catch(error){showToast(error.message);return false;}
     if(JSON.stringify(p.productive.trade)===JSON.stringify(config))return false;
     return fiscalCommit(function(){p.productive.trade=JSON.parse(JSON.stringify(config));state.historyLog.unshift(state.year+' [Tregtia]: U ndryshuan parametrat e mallrave; pa pagesë nga arka.');});
+}
+
+function bilateralPartners(st){return ['USA','UK','ALBANIA','TURKEY'].filter(function(id){return !!st.diplomacy[id];});}
+function enableBilateralTrade(){if(state.bilateralTrade)return false;return fiscalCommit(function(){state.bilateralTrade={version:1,startTurn:state.turnCount,lastTurn:state.turnCount,revision:0,counter:0,stocks:{wheat:0,energy:0,steel:0,technology:0},released:{wheat:0,energy:0,steel:0,technology:0},factors:{wheat:1,energy:1,steel:1,technology:1},contracts:[]};});}
+function bilateralQuote(product,side,st){var p=BILATERAL_PRODUCTS[product];return p?p.price*(st.bilateralTrade?.factors[product]||1)*(side==='SELL'?.95:1):NaN;}
+function bilateralHouseholdPriceFactor(st,key){var f=st.bilateralTrade?.factors;if(!f)return 1;return key==='agriculture'?.8*f.wheat+.2*f.energy:.5*f.energy+.3*f.steel+.2*f.technology;}
+function bilateralCommit(change){return fiscalCommit(function(){change();validateBilateralTrade(state);});}
+function signBilateralContract(partner,product,side,quantity,expectedRevision){
+    var t=state.bilateralTrade,p=BILATERAL_PRODUCTS[product];
+    if(!t || t.revision!==expectedRevision || !p || !bilateralPartners(state).includes(partner) || !['BUY','SELL'].includes(side) || !Number.isInteger(quantity) || quantity<1 || quantity>1000000 || t.contracts.filter(function(c){return c.status==='PENDING';}).length>=10)return false;
+    if(state.diplomacy[partner].score<20){showToast('Marrëdhëniet aktuale nuk lejojnë këtë kontratë.');return false;}
+    var unitPrice=bilateralQuote(product,side,state),costB=fiscalRound(quantity*unitPrice/1e9);
+    if(side==='BUY'){var authorization=fiscalSpendingCheck(costB,false);if(!authorization.allowed || state.budgetTotalB<costB){showToast(authorization.message||'Mungojnë fondet për kontratën.');return false;}}
+    else if(t.stocks[product]<quantity){showToast('Stoku i lirë nuk e mbulon shitjen.');return false;}
+    return bilateralCommit(function(){
+        var c={id:'trade:'+ (++t.counter),partnerId:partner,product:product,side:side,quantity:quantity,unitPrice:unitPrice,costB:costB,signedTurn:state.turnCount,dueTurn:state.turnCount+2,status:'PENDING',ledgerId:null};
+        if(side==='BUY'){fiscalSetBalance(state,'budgetTotalB',fiscalRound(state.budgetTotalB-costB),'Blerje rezervash publike: '+p.name,'EXPENSE');c.ledgerId=state.publicFinance.ledger.at(-1).id;}else t.stocks[product]-=quantity;
+        t.contracts.push(c);t.revision++;state.historyLog.unshift('Java '+state.turnCount+': Kontratë '+(side==='BUY'?'blerjeje':'shitjeje')+' me '+state.diplomacy[partner].name+' për '+quantity+' '+p.unit+' '+p.name+'.');
+    });
+}
+function processBilateralTradeWeek(turn){
+    var t=state.bilateralTrade;if(!t)return false;if(turn!==state.turnCount)throw Error('Ora e tregtisë nuk përputhet me javën.');if(t.lastTurn>=turn)return false;if(t.lastTurn+1!==turn)throw Error('Tregtia kërkon javë të njëpasnjëshme.');
+    t.contracts.filter(function(c){return c.status==='PENDING' && c.dueTurn<=turn;}).forEach(function(c){
+        if(c.side==='BUY')t.stocks[c.product]+=c.quantity;
+        else{fiscalSetBalance(state,'budgetTotalB',fiscalRound(state.budgetTotalB+c.costB),'Shitje rezervash publike: '+BILATERAL_PRODUCTS[c.product].name,'REVENUE');c.ledgerId=state.publicFinance.ledger.at(-1).id;}
+        c.status='DELIVERED';c.deliveredTurn=turn;addMediaNews('Tregtia','Përfundon kontrata për '+c.quantity+' '+BILATERAL_PRODUCTS[c.product].unit+' '+BILATERAL_PRODUCTS[c.product].name+' me '+state.diplomacy[c.partnerId].name+'.','NEUTRAL');
+    });
+    Object.keys(BILATERAL_PRODUCTS).forEach(function(k){var p=BILATERAL_PRODUCTS[k],available=t.stocks[k],used=Math.min(available,p.weeklyUse),coverage=Math.min(4,available/p.weeklyUse);t.factors[k]=fiscalRound(1+(1-used/p.weeklyUse)*.05-coverage*.025);t.stocks[k]-=used;t.released[k]+=used;});
+    t.lastTurn=turn;t.revision++;validateBilateralTrade(state);return true;
+}
+function validateBilateralTrade(st){
+    var t=st.bilateralTrade;if(t===undefined)return;
+    if(!t || t.version!==1 || !Number.isInteger(t.startTurn) || t.startTurn<0 || !Number.isInteger(t.lastTurn) || t.lastTurn<t.startTurn || t.lastTurn>st.turnCount || !Number.isInteger(t.revision) || t.revision<0 || !Number.isInteger(t.counter) || !Array.isArray(t.contracts) || t.counter!==t.contracts.length || !t.stocks || !t.released || !t.factors)throw Error('Gjendja e tregtisë është e pavlefshme.');
+    if(t.revision!==t.contracts.length+t.lastTurn-t.startTurn)throw Error('Checkpoint-i i tregtisë nuk përputhet me kontratat dhe javët.');
+    var ids=new Set(),ledgerIds=new Set();t.contracts.forEach(function(c){
+        if(!c || ids.has(c.id) || typeof c.id!=='string' || !bilateralPartners(st).includes(c.partnerId) || !BILATERAL_PRODUCTS[c.product] || !['BUY','SELL'].includes(c.side) || !Number.isInteger(c.quantity) || c.quantity<1 || c.quantity>1000000 || !Number.isFinite(c.unitPrice) || c.unitPrice<=0 || !Number.isFinite(c.costB) || c.costB<=0 || Math.abs(c.costB-fiscalRound(c.quantity*c.unitPrice/1e9))>1e-9 || !Number.isInteger(c.signedTurn) || c.signedTurn<t.startTurn || c.signedTurn>st.turnCount || c.dueTurn!==c.signedTurn+2 || !['PENDING','DELIVERED'].includes(c.status) || c.status==='DELIVERED' && (!Number.isInteger(c.deliveredTurn) || c.deliveredTurn<c.dueTurn || c.deliveredTurn>t.lastTurn))throw Error('Kontrata tregtare është e pavlefshme.');
+        if(c.side==='BUY' || c.status==='DELIVERED'){var row=st.publicFinance.ledger.find(function(r){return r.id===c.ledgerId;});if(!row || ledgerIds.has(c.ledgerId) || row.account!=='budgetTotalB' || row.type!==(c.side==='BUY'?'EXPENSE':'REVENUE') || Math.abs(row.amountB-(c.side==='BUY'?-c.costB:c.costB))>1e-8)throw Error('Kontrata nuk rakordohet me pagesën publike.');ledgerIds.add(c.ledgerId);}else if(c.ledgerId!==null)throw Error('Eksporti në pritje nuk mund të ketë arkëtim.');ids.add(c.id);
+    });
+    Object.keys(BILATERAL_PRODUCTS).forEach(function(k){var incoming=t.contracts.filter(function(c){return c.product===k && c.side==='BUY' && c.status==='DELIVERED';}).reduce(function(s,c){return s+c.quantity;},0),outgoing=t.contracts.filter(function(c){return c.product===k && c.side==='SELL';}).reduce(function(s,c){return s+c.quantity;},0);if(!Number.isInteger(t.stocks[k]) || t.stocks[k]<0 || !Number.isInteger(t.released[k]) || t.released[k]<0 || t.stocks[k]!==incoming-outgoing-t.released[k] || !Number.isFinite(t.factors[k]) || t.factors[k]<.9-1e-8 || t.factors[k]>1.05+1e-8)throw Error('Stoqet ose çmimet nuk rakordohen.');});
+}
+function bilateralFormQuote(){var t=state.bilateralTrade;if(!t)return;var k=document.getElementById('bilateralProduct')?.value,side=document.getElementById('bilateralSide')?.value,raw=document.getElementById('bilateralQuantity')?.value,quantity=Number(raw),price=bilateralQuote(k,side,state),host=document.getElementById('bilateralQuote');if(!host)return;host.textContent=String(raw||'').trim() && Number.isInteger(quantity) && quantity>0 && quantity<=1000000?'Çmimi: €'+price.toFixed(2)+'/'+BILATERAL_PRODUCTS[k].unit+' · Shuma: €'+(fiscalRound(quantity*price/1e9)*1000).toFixed(3)+'M · Dorëzim pas 2 javësh. '+(side==='BUY'?'Pagesa kryhet në nënshkrim.':'Stoku rezervohet tani; arkëtimi në dorëzim.'):'Shkruani sasi të plotë nga 1 deri në 1,000,000.';}
+function submitBilateralContract(revision){var raw=document.getElementById('bilateralQuantity').value;if(!raw.trim())return false;return signBilateralContract(document.getElementById('bilateralPartner').value,document.getElementById('bilateralProduct').value,document.getElementById('bilateralSide').value,Number(raw),revision);}
+function renderBilateralTrade(){
+    var host=document.getElementById('bilateralTradePanel');if(!host || !state)return;var t=state.bilateralTrade,e=catalogEscape;
+    if(!t){host.innerHTML='<section class="card"><h2>Tregtia bilaterale dhe rezervat</h2><p>Katër produkte me sasi të matshme dhe kontrata shtetërore. Aktivizimi nis me stok zero, pa histori të sajuar ose pagesë. Ofertat dhe përdorimi javor janë parametra të skenarit, jo çmime statistikore.</p><button class="action-btn" onclick="enableBilateralTrade()">Hap tregun e rezervave publike</button></section>';return;}
+    host.innerHTML='<section class="card"><h2>Tregtia</h2><p>Rezerva publike, të ndara nga importet private. Blerja përdor arkën; shitja arkëtohet vetëm pas dorëzimit.</p><div class="commodity-grid">'+Object.keys(BILATERAL_PRODUCTS).map(function(k){var p=BILATERAL_PRODUCTS[k];return '<article><h3>'+p.name+'</h3>'+uiDetailRows([['Stoku',t.stocks[k]+' '+p.unit],['Përdorimi javor',p.weeklyUse+' '+p.unit],['Çmimi i blerjes','€'+bilateralQuote(k,'BUY',state).toFixed(2)+'/'+p.unit,true]])+'</article>';}).join('')+'</div><form class="bilateral-form" onsubmit="event.preventDefault();submitBilateralContract('+t.revision+')"><label>Partneri<select id="bilateralPartner">'+bilateralPartners(state).map(function(id){return '<option value="'+id+'">'+e(state.diplomacy[id].name)+'</option>';}).join('')+'</select></label><label>Produkti<select id="bilateralProduct" onchange="bilateralFormQuote()">'+Object.keys(BILATERAL_PRODUCTS).map(function(k){return '<option value="'+k+'">'+BILATERAL_PRODUCTS[k].name+'</option>';}).join('')+'</select></label><label>Veprimi<select id="bilateralSide" onchange="bilateralFormQuote()"><option value="BUY">Bli</option><option value="SELL">Shit stok publik</option></select></label><label>Sasia<input id="bilateralQuantity" type="number" min="1" max="1000000" step="1" required placeholder="p.sh. 100000" oninput="bilateralFormQuote()"></label><p id="bilateralQuote" role="status">Shqyrtoni shumën para nënshkrimit.</p><button class="action-btn" type="submit">Nënshkruaj kontratën</button></form><p>Furnizimi lirohet çdo javë nga rezervat. Ndikon në çmimet e mallrave dhe në shportën e familjeve kur moduli i konsumit është aktiv; nuk krijon tatime ose prodhim privat automatik.</p><details><summary>Kontratat dhe dorëzimet ('+t.contracts.length+')</summary>'+t.contracts.slice().reverse().map(function(c){return '<article><strong>'+BILATERAL_PRODUCTS[c.product].name+' · '+(c.side==='BUY'?'Blerje':'Shitje')+'</strong><p>'+e(state.diplomacy[c.partnerId].name)+' · '+c.quantity+' '+BILATERAL_PRODUCTS[c.product].unit+' · €'+(c.costB*1000).toFixed(3)+'M</p><p>'+(c.status==='DELIVERED'?'E dorëzuar':'Në pritje')+' · Afati: '+e(diplomaticDate(c.dueTurn))+'</p></article>';}).join('')+'</details></section>';
 }

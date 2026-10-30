@@ -303,7 +303,9 @@
 
                 <div id="dash-overview" class="sub-content">
                     <div id="playerGuidancePanel"></div>
+                    <div id="streetProtestsPanel"></div>
                     <div id="mandateExperiencePanel"></div>
+                    <div id="constitutionPoliticsPanel"></div>
                     <div id="lawNegotiationStepsPanel"></div>
                     <details class="card ux-notifications" id="uxNotificationsPanel"><summary>Njoftimet dhe mesazhet</summary><div id="uxNotificationsContent"></div></details>
                     <div class="grid-2">
@@ -679,6 +681,10 @@
                     <button class="sub-pill" onclick="switchSubTab('gov', 'meeting', this)">🗂️ Mbledhja e Qeverisë</button>
                     <button class="sub-pill" onclick="switchSubTab('gov', 'macro', this)">💶 Makroekonomia</button>
                     <button class="sub-pill" onclick="switchSubTab('gov', 'fiscal', this)">📊 Buxheti & Ekonomia</button>
+                    <button class="sub-pill" onclick="switchSubTab('gov', 'trade', this);renderBilateralTrade()">Tregtia</button>
+                    <button class="sub-pill" onclick="switchSubTab('gov','war',this);renderSecurityOps()">War Room</button>
+                    <button class="sub-pill" onclick="switchSubTab('gov','intelligence',this);renderSecurityOps()">Inteligjenca</button>
+                    <button class="sub-pill" onclick="switchSubTab('gov','investments',this);renderForeignInvestments()">Investimet e Huaja</button>
                 </div>
 
                 <div id="gov-cabinet" class="sub-content">
@@ -724,6 +730,16 @@
                 <div id="gov-fiscal" class="sub-content" style="display:none;">
                     <div id="fiscalPanelContainer"></div>
                 </div>
+                <div id="gov-trade" class="sub-content" style="display:none;"><div id="bilateralTradePanel"></div></div>
+                <div id="gov-war" class="sub-content tactical-room" style="display:none;">
+                    <svg class="tactical-map" viewBox="0 0 600 420" role="group" aria-label="Harta skematike e rajoneve komanduese; nuk paraqet kufij realë">
+                        <g data-region="north" role="button" tabindex="0" aria-label="Zgjidh Veriun" onclick="securityRegionSelect('north')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();securityRegionSelect('north')}"><path d="M160 20 L410 30 470 140 310 180 140 130Z"/><text x="300" y="95">VERIU</text></g>
+                        <g data-region="capital" role="button" tabindex="0" aria-label="Zgjidh Kryeqytetin" onclick="securityRegionSelect('capital')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();securityRegionSelect('capital')}"><path d="M140 140 L310 190 470 150 440 290 200 300 110 240Z"/><text x="290" y="240">KRYEQYTETI</text></g>
+                        <g data-region="border" role="button" tabindex="0" aria-label="Zgjidh Kufirin" onclick="securityRegionSelect('border')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();securityRegionSelect('border')}"><path d="M105 250 L195 310 445 300 400 390 150 400 50 330Z"/><text x="270" y="355">KUFIRI</text></g>
+                    </svg><div id="securityWarPanel"></div>
+                </div>
+                <div id="gov-intelligence" class="sub-content tactical-room" style="display:none;"><div id="securityIntelPanel"></div></div>
+                <div id="gov-investments" class="sub-content" style="display:none;"><div id="foreignInvestmentsPanel"></div></div>
             </section>
 
             <!-- TAB 5: 38 KOMUNAT -->
@@ -895,6 +911,11 @@
 <script src="sector-laws.js"></script>
 <script src="ux-guidance.js"></script>
 <script src="mandate-experience.js"></script>
+<script src="constitution-dark-politics.js"></script>
+<script src="street-protests.js"></script>
+<script src="security-ops.js"></script>
+<script src="foreign-investments.js"></script>
+<button type="button" id="streetProtestAlert" class="btn-top street-protest-alert" onclick="openStreetProtests()" hidden>Protestë aktive · Shqyrto vendimin</button>
 <aside id="mandateBreakingNews" class="mandate-breaking" aria-live="polite" hidden></aside>
 </body>
 </html>

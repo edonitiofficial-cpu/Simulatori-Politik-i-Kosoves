@@ -74,9 +74,10 @@ function fiscalOrderValid(p){
 function fiscalRound(n){return +n.toFixed(9);}
 function fiscalEconomicIndex(st){return (st.gdpGrowth-3.9)*.035+(10.8-st.unemployment)*.015;}
 function fiscalExpectedRevenues(){
-    if(economicPilotActive(state)){var p=state.economicPilot;return fiscalRound(Math.max(0,economicTaxCalculation(state,state.taxPolicy,economicActivity(p),p.wageIndex,100-state.unemployment).total+state.publicFinance.decisions.filter(function(d){return d.status==='ACTIVE' && (d.kind!=='TAX' || !d.pilotStartRates);}).reduce(function(s,d){return s+d.annualRevenueDelta*(1-d.elapsed/d.weeks);},0)));}
+    var extraFDI=typeof foreignInvestmentAnnualTax==='function'?foreignInvestmentAnnualTax(state):0;
+    if(economicPilotActive(state)){var p=state.economicPilot;return fiscalRound(Math.max(0,economicTaxCalculation(state,state.taxPolicy,economicActivity(p),p.wageIndex,100-state.unemployment).total+state.publicFinance.decisions.filter(function(d){return d.status==='ACTIVE' && (d.kind!=='TAX' || !d.pilotStartRates);}).reduce(function(s,d){return s+d.annualRevenueDelta*(1-d.elapsed/d.weeks);},0))+extraFDI);}
     var f=state.publicFinance,pending=f.decisions.filter(function(d){return d.status==='ACTIVE';}).reduce(function(sum,d){return sum+(d.annualRevenueDelta||0)*(1-d.elapsed/d.weeks);},0);
-    return fiscalRound(clamp(state.taxRevenueB+fiscalEconomicIndex(state)-f.lastEconomicIndex+pending,0,10));
+    return fiscalRound(clamp(state.taxRevenueB+fiscalEconomicIndex(state)-f.lastEconomicIndex+pending,0,10)+extraFDI);
 }
 function fiscalSourceLabel(source){
     var labels={catalogFund:'Financim paraprak i projektit ose ligjit',municipalProjectAction:'Financim i projektit komunal',createDevelopmentProject:'Financim i projektit zhvillimor',processDevelopmentWeek:'Pagesa e projektit zhvillimor',launchStateSectorProject:'Financim i reformës sektoriale',resolveWeeklyDossier:'Vendim për dosjen javore',resolvePMRequest:'Vendim për kërkesën institucionale',resolveCabinetDecision:'Vendim i kabinetit',resolveMinisterMeeting:'Financim i kërkesës ministrore',fulfillPromiseNow:'Pagesa për zotimin qeveritar',evaluateCoalitionRound3:'Harmonizim i programit qeveritar',interactWithMP:'Grant rajonal',applyLawEffects:'Pagesë për zbatimin e ligjit',resolveBrusselsRound:'Të hyra nga bashkëpunimi ndërkombëtar',submitInternationalProposal:'Kosto e raundit ndërkombëtar',completeLegacyInternationalMilestone:'Pagesë për detyrimin ndërkombëtar',advanceAgreementTask:'Pagesë për detyrën e marrëveshjes',requestAgreementCorrectivePlan:'Kosto e planit korrigjues',settleInternationalLoan:'Shlyerje e kredisë ndërkombëtare',updateInternationalAgreements:'Lëvrim i kredisë ndërkombëtare','dynamic-event':'Vendim për zhvillimin politik'};
@@ -152,7 +153,7 @@ function fiscalYearTransition(){
     if(!b)f.budgets[state.year]={year:state.year,status:'MISSING',plannedB:0,capitalB:0,allocations:[],lawId:null};
     if(b?.status==='APPROVED')b.allocations.forEach(function(a){var m=state.ministries.find(function(m){return m.id===a.id;});if(m)m.budget=a.budgetM;});
     state.plannedExpenses=b?.status==='APPROVED'?b.plannedB:0;
-    state.plannedRevenues=state.taxRevenueB;
+    state.plannedRevenues=state.taxRevenueB+(typeof foreignInvestmentAnnualTax==='function'?foreignInvestmentAnnualTax(state):0);
     state.historyLog.unshift(state.year+' [Financat]: '+(b?.status==='APPROVED'?'Buxheti i votuar hyn në zbatim.':'Nuk ka buxhet vjetor të miratuar. Mjetet dhe detyrimet ruhen; financimi i përkohshëm nuk është modeluar.'));
 }
 function processFiscalWeek(turn){
@@ -176,7 +177,10 @@ function processFiscalWeek(turn){
     processEconomicPilotWeek(turn);
     captureFinancePrices(state);
     var revenue=fiscalRound(Math.max(0,state.taxRevenueB)/FISCAL_WEEKS),operating=fiscalRound(fiscalOperatingPlan()/FISCAL_WEEKS),interest=fiscalRound(fiscalAnnualInterestB(state)/FISCAL_WEEKS);
-    fiscalSetBalance(state,'budgetTotalB',fiscalRound(state.budgetTotalB+revenue),'Inkasimi javor i ATK-së dhe Doganës','REVENUE');
+    var fdiTax=typeof foreignInvestmentAnnualTax==='function'?fiscalRound(foreignInvestmentAnnualTax(state)/FISCAL_WEEKS):0;
+    if(fdiTax)fiscalSetBalance(state,'budgetTotalB',fiscalRound(state.budgetTotalB+fdiTax),'IHD: tatimet javore','REVENUE');
+    revenue=fiscalRound(revenue+fdiTax);
+    fiscalSetBalance(state,'budgetTotalB',fiscalRound(state.budgetTotalB+revenue-fdiTax),'Inkasimi javor i ATK-së dhe Doganës','REVENUE');
     var approved=fiscalBudgetForYear(state.year),room=approved?.status==='APPROVED'?Math.max(0,approved.plannedB-state.realizedExpenses):Infinity;
     var available=Math.min(Math.max(0,state.budgetTotalB),room),paidInterest=Math.min(available,interest);available-=paidInterest;
     if(paidInterest)fiscalSetBalance(state,'budgetTotalB',fiscalRound(state.budgetTotalB-paidInterest),'Interesi i borxhit publik','INTEREST');

@@ -152,6 +152,7 @@ function processMunicipalDevelopmentWeek(){
     municipal14Records(state).forEach(function(p){
         if(!['FUNDED','ACTIVE','DELAYED'].includes(p.status) || p.lastTurn>=state.turnCount)return;
         p.lastTurn=state.turnCount;
+        if(typeof streetSectorBlocked==='function' && streetSectorBlocked(p.sector,state.turnCount,state))return;
         if(!state.governmentFormed || state.governmentStatus!=='IN_OFFICE'){
             if(p.status!=='DELAYED'){p.delayReason='Qeveria nuk është në detyrë; koordinimi institucional është pezulluar.';municipal14Set(p,'DELAYED',p.delayReason);}
         }else if(p.status!=='DELAYED'){

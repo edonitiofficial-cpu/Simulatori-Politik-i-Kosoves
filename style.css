@@ -1456,3 +1456,32 @@ select:focus, input:focus, textarea:focus {
 .news-lead { font-size:1.05rem; color:#f8fafc; font-weight:600; }
 .news-closing { border-top:1px solid #334155; padding-top:16px; color:#cbd5e1; }
 .news-reactions { border-left:3px solid #7dd3fc; padding:10px 16px; background:#0f172a; }
+.dark-politics { border-color:#a855f7; }
+.dark-politics label { display:flex; flex-direction:column; gap:6px; margin:14px 0 8px; }
+.dark-politics progress { display:block; width:100%; height:16px; accent-color:#ef4444; }
+#constitutionPoliticsPanel article { padding:10px 0; border-bottom:1px solid #334155; }
+#constitutionPoliticsPanel button { margin:5px 4px 5px 0; }
+.commodity-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:16px; }
+.commodity-grid article { border:1px solid #334155; border-radius:12px; padding:14px; min-width:0; }
+.bilateral-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:14px; margin:20px 0; }
+.bilateral-form label { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.bilateral-form p { grid-column:1/-1; }
+.street-protest-card { border:1px solid #f87171; }
+.street-protest-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:12px; }
+.street-protest-options button { white-space:normal; line-height:1.6; }
+.street-protest-alert { position:fixed; right:16px; top:80px; max-width:calc(100vw - 32px); z-index:9000; border-color:#ef4444; background:#38191d; }
+.street-protest-alert[hidden] { display:none; }
+.tactical-room { background:linear-gradient(145deg,#08151a,#0c1020); padding:20px; border:1px solid #31534f; border-radius:16px; }
+.tactical-map { display:block; width:100%; max-width:650px; margin:auto; }
+.tactical-map path { fill:#183c3d; stroke:#6fb9a8; stroke-width:2; }
+.tactical-map g { cursor:pointer; }
+.tactical-map g:hover path,.tactical-map g:focus path,.tactical-map g.selected path { fill:#345d52; stroke:#fbbf24; stroke-width:4; }
+.tactical-map text { fill:#d3e8e0; font:600 16px sans-serif; text-anchor:middle; pointer-events:none; }
+.tactical-room label { display:block; margin:12px 0; }
+.tactical-room select { width:100%; min-height:44px; }
+.tactical-room p { overflow-wrap:anywhere; line-height:1.6; }
+.tactical-room button { background:#18332f; color:#e4f5ef; border:1px solid #588677; border-radius:9px; padding:12px 16px; min-height:44px; cursor:pointer; font-weight:600; max-width:100%; }
+.tactical-room button:hover:not(:disabled) { border-color:#fbbf24; background:#25463d; }
+.tactical-room button:disabled { opacity:.5; cursor:not-allowed; }
+.fdi-offers { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:16px; margin-top:20px; }
+.fdi-income { color:#6ee7b7; border-left:3px solid #10b981; padding:12px; background:#062b25; }
