@@ -8,16 +8,18 @@ function validatePublicSupport(st){
     var p=st.publicSupport;
     if(!p || p.version!==1 || !Number.isInteger(p.turn) || p.turn<0 || p.turn>st.turnCount || !Number.isFinite(p.gained) || p.gained<0 || p.gained>1.500001 || !Number.isFinite(p.lost) || p.lost<0 || p.lost>3.000001 || !p.sources || typeof p.sources!=='object' || Array.isArray(p.sources))throw Error('Regjistri i reagimit publik është i pavlefshëm.');
     Object.values(p.sources).forEach(function(v){if(!Number.isFinite(v) || v<0)throw Error('Ndikimi publik i ruajtur është i pavlefshëm.');});
+    if(p.rtkRawLost!==undefined&&(!Number.isFinite(p.rtkRawLost)||p.rtkRawLost< p.lost-1e-8||p.rtkRawLost>3.000001))throw Error('Kufiri i humbjeve publike të RTK-së është i pavlefshëm.');
 }
 function adjustPublicSupport(delta,context,st){
     st=st || state;context=context || {};if(!Number.isFinite(delta) || !delta)return 0;
     migratePublicSupport(st);
     var p=st.publicSupport;
-    if(p.turn!==st.turnCount){p.turn=st.turnCount;p.gained=0;p.lost=0;p.sources={};}
+    if(p.turn!==st.turnCount){p.turn=st.turnCount;p.gained=0;p.lost=0;p.sources={};delete p.rtkRawLost;}
     var source=context.source || 'decision',positive=delta>0;
     // Communication and a new promise alone are not evidence of better services.
     if(positive && /issueQuickPressRelease|publishPressRelease|issuePublicStatement|submitPressAnswer|finishFullPressConference|runParliamentaryInterpellation/.test(source))return 0;
     var magnitude=Math.abs(delta)*(context.implemented ? 1 : (positive ? .2 : .4));
+    if(!positive&&typeof diasporaLossMultiplier==='function')magnitude*=diasporaLossMultiplier(st);
     if(context.scope==='LOCAL')magnitude*=.08;
     if(context.sectorId){
         var sector=(st.stateSectors||[]).find(function(s){return s.id===context.sectorId;});
@@ -31,11 +33,11 @@ function adjustPublicSupport(delta,context,st){
         var key='gain:'+source,used=p.sources[key] || 0;
         magnitude=Math.min(magnitude,.45,Math.max(0,.45-used),Math.max(0,1.5-p.gained));
         var next=Math.max(st.approval,Math.min(95,st.approval+magnitude)),actual=next-st.approval;
-        st.approval=next;p.gained+=actual;p.sources[key]=used+actual;return actual;
+        st.approval=next;p.gained+=actual;p.sources[key]=used+actual;if(typeof interestPublicReaction==='function')interestPublicReaction(st,actual,context);return actual;
     }
-    magnitude=Math.min(magnitude,.9,Math.max(0,3-p.lost));
+    magnitude=Math.min(magnitude,.9,Math.max(0,3-(p.rtkRawLost??p.lost)));
     var next=Math.min(st.approval,Math.max(5,st.approval-magnitude)),actual=st.approval-next;
-    st.approval=next;p.lost+=actual;return -actual;
+    var rawLoss=actual;if(rtkProtected(st)||p.rtkRawLost!==undefined)p.rtkRawLost=(p.rtkRawLost??p.lost)+rawLoss;actual=-rtkApplyApproval(st,-rawLoss);p.lost+=actual;if(typeof interestPublicReaction==='function')interestPublicReaction(st,-actual,context);return -actual;
 }
 function publicSupportReaction(delta,stage){
     if(stage==='PROMISE')return 'Zotimi është regjistruar; publiku pret realizimin e tij.';

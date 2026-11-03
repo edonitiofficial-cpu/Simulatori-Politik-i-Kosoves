@@ -65,6 +65,30 @@ function renderPoliticalAgenda(host){
 }
 const POLITICAL_EXECUTIVE_ACTIONS=['submitPressAnswer','startPressConference','publishPressRelease','resolveActiveEvent','openBorrowingModal','repayPublicDebt','openTaxPolicyModal','startInternationalNegotiation','performInternationalRound','openDialogueStep1_Context','openDialogueStep2_Consultations','openDialogueStep3_Proposal','openDialogueStep4_BrusselsRound','openMinisterOneOnOneModal','openMinisterChat','submitMinisterChat','resolveMinisterMeeting','openInternalGovMeetingModal','resolveInternalGroupMeeting','launchStateSectorProject','openCabinetDebateModal','resolveCabinetDecision','adjustMinistryBudget','reshuffleMinister','applyFiscalPolicy','openBudgetAllocationModal','confirmBudgetAllocation','issueGovernmentBond','payPublicDebt','applyTaxPolicyChange','transferToReserve','auditPublicSpending','openDevelopmentProjectModal','createDevelopmentProject','saveDevelopmentProjectAsDraft','catalogGovernmentDecision','approveCatalogProject','fulfillPromiseNow','openDialogueStepModal','openInvitationResponseModal','respondToInvitation','startConsultationSession','consultationStep2','consultationStep3','saveDialogueProposalAndAdvance','resolveBrusselsRound','resetDialogueForNextRound','advanceDialogueStep','consultAlliesOffTable','executeNorthSecurityOperation'];
 function renderPoliticalRoleUI(){
+    if(typeof renderOppositionHQ==='function')renderOppositionHQ();
+    if(typeof renderGovernmentCrisisUI==='function')renderGovernmentCrisisUI();
+    if(typeof renderInterestGroups==='function')renderInterestGroups();
+    if(typeof renderConstitutionalCourt==='function')renderConstitutionalCourt();
+    if(typeof renderElectoralAccountability==='function')renderElectoralAccountability();
+    if(typeof renderStateEnterprises==='function')renderStateEnterprises();
+    if(typeof renderIntelligenceAgency==='function')renderIntelligenceAgency();
+    if(typeof renderNationalEmergencies==='function')renderNationalEmergencies();
+    if(typeof renderPopulation==='function')renderPopulation();renderLaborExodus();renderDinarCrisis();renderBureauBattle();renderPersonnelRegistry();renderHighwayProject();renderSovereignFund();renderTrepca();renderRTK();renderEnergyInquiry();
+    if(typeof renderDiaspora==='function')renderDiaspora();
+    if(typeof renderUnions==='function')renderUnions();
+    if(typeof renderSurvivalCrises==='function')renderSurvivalCrises();renderVeteransBudget();renderCoalitionBlackmail();
+    if(typeof renderBrusselsSpecial==='function')renderBrusselsSpecial();
+    renderInstitutionalConflicts();renderNorthCrisis();renderInternalPressure();renderMediaDossiers();renderMediaBombStatus();renderCouncilEurope();renderWinterEnergy();renderGeneralStrike();renderMunicipalGrants();renderAssociationUltimatum();renderEnterpriseBoards();renderDiasporaMobilization();
+    if(typeof renderLocalElections==='function')renderLocalElections();
+    if(typeof renderLocalElectionNotice==='function')renderLocalElectionNotice();
+    if(typeof renderIMFCrisis==='function')renderIMFCrisis();
+    if(typeof renderMediaWarfare==='function')renderMediaWarfare();
+    if(typeof renderSecurityCrises==='function')renderSecurityCrises();
+    if(typeof renderJusticeReform==='function')renderJusticeReform();
+    if(typeof renderLawImplementation==='function')renderLawImplementation();
+    if(typeof renderInformalEconomy==='function')renderInformalEconomy();
+    if(typeof renderLocalObstructions==='function')renderLocalObstructions();
+    polishDevelopmentSurface(document.getElementById('tab-development'));
     var role=politicalPlayerRole(),host=document.getElementById('politicalRolePanel'),e=catalogEscape;
     if(host)host.innerHTML='<div class="political-role-card"><div><span class="tag tag-gold">'+e(role.label)+'</span><p>'+role.seats+' deputetë aktivë · '+(state.assemblyConstituted && state.speakerElected?'Kuvendi i konstituuar':'Kuvendi në proces konstituimi')+'</p></div><div class="candidate-actions"><button class="action-btn" onclick="switchMainTab(\'tab-assembly\')">Puna parlamentare</button><button class="action-btn" onclick="openLawNegotiations()">Mbështetja e projektligjeve</button><button class="action-btn" onclick="openScheduleMeetingModal(\'PARTY_LEADERS\')">Kontaktet politike</button>'+(!role.executive?'<button class="action-btn" onclick="openPartyPressConference()">Konferencë e partisë</button>':'')+'</div></div>';
     if(document.querySelectorAll)document.querySelectorAll('[onclick],[onchange],[oninput],[onsubmit]').forEach(function(el){

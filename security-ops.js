@@ -1,7 +1,8 @@
 /* Aggregate command units and fictional operations; existing treasury and calendar. */
 const SECURITY_REGIONS={north:'Veriu',border:'Kufiri',capital:'Kryeqyteti'};
 const SECURITY_OPERATIONS={SABOTAGE:{name:'Saboto opozitën',cost:.0002,success:.6,exposure:.35},EMBASSY:{name:'Përgjo një ambasadë',cost:.0003,success:.65,exposure:.3},PROTEST:{name:'Zhbëj protestën në fshehtësi',cost:.0002,success:.7,exposure:.4}};
-function enableSecurityOps(){if(state.securityOps)return false;return fiscalCommit(function(){state.securityOps={version:1,lastTurn:state.turnCount,revision:0,units:{north:{army:2,special:1},border:{army:2,special:1},capital:{army:2,special:1}},moves:[],operations:[]};});}
+function createSecurityOpsState(st){return {version:1,lastTurn:st.turnCount,revision:0,units:{north:{army:2,special:1},border:{army:2,special:1},capital:{army:2,special:1}},moves:[],operations:[]};}
+function enableSecurityOps(){if(state.securityOps)return false;return fiscalCommit(function(){state.securityOps=createSecurityOpsState(state);});}
 function securityCommit(change){return fiscalCommit(function(){change();validateSecurityOps(state);validateConstitutionDarkPolitics(state);});}
 function moveSecurityUnit(from,to,type,revision){
  const s=state.securityOps,cost=.0001;if(!s || s.revision!==revision || !Object.hasOwn(SECURITY_REGIONS,from) || !Object.hasOwn(SECURITY_REGIONS,to) || from===to || !['army','special'].includes(type) || s.units[from][type]<1)return false;
@@ -14,7 +15,7 @@ function launchSecurityOperation(kind,target,revision){
  if(kind==='SABOTAGE' && (!state.parties[target] || target===state.playerParty || state.coalitionParties.includes(target)))return false;
  if(kind==='EMBASSY' && !bilateralPartners(state).includes(target))return false;
  if(kind==='PROTEST' && activeStreetProtest(state)?.id!==target)return false;
- return securityCommit(function(){d.blackFundB=fiscalRound(d.blackFundB-c.cost);d.revision++;d.scandalRisk=Math.min(100,d.scandalRisk+10);s.operations.push({id:'security:'+s.operations.length,kind,target,costB:c.cost,startedTurn:state.turnCount,dueTurn:state.turnCount+1,status:'PENDING',successRoll:Math.random(),exposureRoll:Math.random(),resolvedTurn:null,success:null,exposed:null,report:null});s.revision++;darkScandal();});
+ return securityCommit(function(){d.blackFundB=fiscalRound(d.blackFundB-c.cost);d.revision++;d.scandalRisk=Math.min(100,d.scandalRisk+10);s.operations.push({id:'security:'+s.operations.length,kind,target,costB:c.cost,startedTurn:state.turnCount,dueTurn:state.turnCount+1,status:'PENDING',successRoll:Math.random(),exposureRoll:Math.random(),resolvedTurn:null,success:null,exposed:null,report:null});s.revision++;if(typeof registerIntelligenceCovertUse==='function')registerIntelligenceCovertUse(s.operations.at(-1));darkScandal();});
 }
 function processSecurityOpsWeek(turn){
  const s=state.securityOps;if(!s)return false;if(turn!==state.turnCount || turn!==s.lastTurn+1){if(turn===s.lastTurn)return false;throw Error('Ora e komandës nuk përputhet me kalendarin.');}
@@ -25,7 +26,7 @@ function processSecurityOpsWeek(turn){
   if(o.kind==='PROTEST' && o.success){const p=activeStreetProtest(state);if(p?.id===o.target){applyStreetProtestResolution(p,'COVERT');o.report='Protesta përfundoi pa bllokim të punimeve.';}else{o.success=false;o.report='Protesta ishte mbyllur; nuk u aplikua efekt i dytë.';}}
   if(!o.report)o.report='Operacioni nuk dha rezultat.';
   if(o.exposed){if(o.kind==='EMBASSY' && state.diplomacy[o.target])state.diplomacy[o.target].score=Math.max(0,state.diplomacy[o.target].score-10);else if(o.kind==='SABOTAGE' && state.parties[o.target])state.parties[o.target].relations[state.playerParty]=Math.max(0,(state.parties[o.target].relations[state.playerParty]||0)-10);else if(state.diplomacy.EU)state.diplomacy.EU.score=Math.max(0,state.diplomacy.EU.score-5);addMediaNews('Hetimi publik','Zbulohet një operacion i fshehtë','CRITICAL',c.name+'. '+o.report);}
- });s.lastTurn=turn;validateSecurityOps(state);return true;
+ });if(typeof processIntelligenceAgencyWeek==='function')processIntelligenceAgencyWeek(turn);s.lastTurn=turn;validateSecurityOps(state);return true;
 }
 function validateSecurityOps(st){
  const s=st.securityOps;if(s===undefined)return;const fail=()=>{throw Error('Gjendja e komandës është e pavlefshme.');};

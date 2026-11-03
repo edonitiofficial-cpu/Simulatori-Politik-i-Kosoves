@@ -112,6 +112,7 @@ function municipalProjectAction(id,action){
     if(!assertGovernmentAuthority('Vendimi për projektin komunal'))return false;
     if(state.pendingVote || weeklyProcessing || (state.weekCalendar?.transition && !weeklyVisualCommit)){showToast('Përfundoni votimin ose kalimin e javës para vendimit.');return false;}
     var p=municipal14Find(id);if(!p)return false;
+    if(['APPROVE','FUND','RESUME'].includes(action)&&municipalAusterity(state)){showToast('FMN: investimet kapitale ne 38 komunat jane ngrire.');return false;}
     var before=JSON.stringify(state);
     if(action==='PROPOSE' && p.status==='AVAILABLE'){
         p.createdTurn=state.turnCount;p.createdDate=diplomaticDate(state.turnCount);municipal14Set(p,'PROPOSED','Propozuar për financim qeveritar.');
@@ -152,13 +153,14 @@ function processMunicipalDevelopmentWeek(){
     municipal14Records(state).forEach(function(p){
         if(!['FUNDED','ACTIVE','DELAYED'].includes(p.status) || p.lastTurn>=state.turnCount)return;
         p.lastTurn=state.turnCount;
+        if(municipalAusterity(state)){p.delayReason='FMN: ngrirje kapitale komunale';return;}if(p.delayReason==='FMN: ngrirje kapitale komunale')p.delayReason='';
         if(typeof streetSectorBlocked==='function' && streetSectorBlocked(p.sector,state.turnCount,state))return;
         if(!state.governmentFormed || state.governmentStatus!=='IN_OFFICE'){
             if(p.status!=='DELAYED'){p.delayReason='Qeveria nuk është në detyrë; koordinimi institucional është pezulluar.';municipal14Set(p,'DELAYED',p.delayReason);}
         }else if(p.status!=='DELAYED'){
             if(!p.startTurn){p.startTurn=state.turnCount;p.startDate=diplomaticDate(state.turnCount);}
             if(p.status==='FUNDED')municipal14Set(p,'ACTIVE','Nis zbatimi.');
-            p.elapsed++;p.progress=Math.min(100,p.elapsed/p.duration*100);
+            p.elapsed=Math.min(p.duration,p.elapsed+rogueProjectStep('CAT|'+p.id,'CAT',p.duration-p.elapsed));p.progress=Math.min(100,p.elapsed/p.duration*100);
             p.spentB=+(p.costB*p.elapsed/p.duration).toFixed(9);p.remainingB=+(p.costB-p.spentB).toFixed(9);
             p.tasks.forEach(function(t,index){t.done=p.progress>=[20,80,100][index];});
             applyMunicipal14Progress(p,p.effectMode==='GRADUAL'?p.progress/100:p.progress===100?1:0);
@@ -189,9 +191,9 @@ function municipal14ReportHtml(){
 }
 function renderMunicipalDevelopment(){
     var host=document.getElementById('municipalDevelopment14');if(!host)return;
-    var previous={municipality:document.getElementById('mun14Municipality')?document.getElementById('mun14Municipality').value:state.municipalities[0].id,sector:document.getElementById('mun14Sector')?.value||'',status:document.getElementById('mun14Status')?.value||''},e=catalogEscape;
-    host.innerHTML='<div class="municipal14"><h3>Zhvillimi komunal — 114 projekte të simuluara</h3><p>Emrat e komunave: <a href="https://mapl.rks-gov.net/portali-i-komunave/" target="_blank" rel="noopener">MAPL</a>, kontrolluar më 21.10.2026. Nevojat, treguesit, projektet dhe afatet janë simulim. Shpenzimet janë pjesë e financimit të zotuar; nuk zbriten përsëri çdo javë.</p>'+municipal14ReportHtml()+'<div class="candidate-filters"><label>Komuna<select id="mun14Municipality" onchange="filterMunicipalDevelopment()"><option value="">Të gjitha komunat</option>'+state.municipalities.map(function(m){return '<option value="'+e(m.id)+'">'+e(m.name)+'</option>';}).join('')+'</select></label><label>Sektori<select id="mun14Sector" onchange="filterMunicipalDevelopment()"><option value="">Të gjithë sektorët</option>'+Object.keys(MUNICIPAL_14_SECTORS).map(function(k){return '<option value="'+k+'">'+MUNICIPAL_14_SECTORS[k].name+'</option>';}).join('')+'</select></label><label>Statusi<select id="mun14Status" onchange="filterMunicipalDevelopment()"><option value="">Të gjitha statuset</option><option value="BLOCKED">Të bllokuara / shtyra</option>'+Object.keys(MUNICIPAL_14_STATUS).map(function(k){return '<option value="'+k+'">'+MUNICIPAL_14_STATUS[k]+'</option>';}).join('')+'</select></label></div><div id="mun14Needs"></div><div id="mun14Requests"></div><p>Krahasoni koston, afatin dhe ndikimin në kartat më poshtë. Financimi dhe miratimi janë vendime të simulimit.</p><div class="grid-3" id="mun14List"></div></div>';
-    Object.keys(previous).forEach(function(k){document.getElementById(({municipality:'mun14Municipality',sector:'mun14Sector',status:'mun14Status'})[k]).value=previous[k];});filterMunicipalDevelopment();
+    var previous={municipality:document.getElementById('mun14Municipality')?.value||'',sector:document.getElementById('mun14Sector')?.value||'',status:document.getElementById('mun14Status')?.value||''},e=catalogEscape,wasOpen=document.getElementById('municipalProjectTools')?.open;
+    host.innerHTML='<div class="municipal14 municipal-browser-heading"><h3>Zhvillimi i 38 Komunave</h3><p>Zgjidhni një kartë për infrastrukturën, projektet dhe financimin e komunës.</p><details id="municipalProjectTools" '+(wasOpen?'open':'')+'><summary>Kërko në katalogun e projekteve</summary>'+municipal14ReportHtml()+'<div class="candidate-filters"><label>Komuna<select id="mun14Municipality" onchange="filterMunicipalDevelopment()"><option value="">Të gjitha komunat</option>'+state.municipalities.map(m=>'<option value="'+e(m.id)+'">'+e(m.name)+'</option>').join('')+'</select></label><label>Sektori<select id="mun14Sector" onchange="filterMunicipalDevelopment()"><option value="">Të gjithë sektorët</option>'+Object.keys(MUNICIPAL_14_SECTORS).map(k=>'<option value="'+k+'">'+MUNICIPAL_14_SECTORS[k].name+'</option>').join('')+'</select></label><label>Statusi<select id="mun14Status" onchange="filterMunicipalDevelopment()"><option value="">Të gjitha statuset</option><option value="BLOCKED">Të bllokuara / shtyra</option>'+Object.keys(MUNICIPAL_14_STATUS).map(k=>'<option value="'+k+'">'+MUNICIPAL_14_STATUS[k]+'</option>').join('')+'</select></label></div><div id="mun14Needs"></div><div id="mun14Requests"></div><div class="grid-3" id="mun14List"></div></details></div>';
+    Object.keys(previous).forEach(k=>document.getElementById(({municipality:'mun14Municipality',sector:'mun14Sector',status:'mun14Status'})[k]).value=previous[k]);filterMunicipalDevelopment();
 }
 function filterMunicipalDevelopment(){
     var municipality=document.getElementById('mun14Municipality').value,sector=document.getElementById('mun14Sector').value,status=document.getElementById('mun14Status').value;
@@ -206,13 +208,13 @@ function municipal14Card(p){
 }
 function openMunicipalDevelopment(mid){
     switchMainTab('tab-elections');switchSubTab('elec','municipalities',document.querySelector('#tab-elections .sub-pill'));renderMunicipalities();
-    document.getElementById('mun14Municipality').value=mid||'';document.getElementById('mun14Sector').value='';document.getElementById('mun14Status').value='';filterMunicipalDevelopment();
+    document.getElementById('mun14Municipality').value=mid||'';document.getElementById('mun14Sector').value='';document.getElementById('mun14Status').value='';filterMunicipalDevelopment();document.getElementById('municipalProjectTools').open=true;
     toggleModal('interactiveActionModal',false);document.getElementById('municipalDevelopment14').scrollIntoView({block:'start'});
 }
 function openMunicipalProject14(id){
     var p=municipal14Find(id);if(!p)return;var m=state.municipalities.find(function(m){return m.id===p.municipalityId;}),e=catalogEscape;
     var buttons=[];
-    function action(label,code){buttons.push('<button class="action-btn btn-gold" onclick="municipalProjectAction(\''+p.id+'\',\''+code+'\')">'+label+'</button>');}
+    function action(label,code){buttons.push('<button class="action-btn btn-gold" '+(['APPROVE','FUND','RESUME'].includes(code)&&municipalAusterity(state)?'disabled':'')+' onclick="municipalProjectAction(\''+p.id+'\',\''+code+'\')">'+label+'</button>');}
     if(p.status==='AVAILABLE')action('Propozo për financim','PROPOSE');
     if(p.status==='PROPOSED')action('Paraqit për shqyrtim qeveritar','REVIEW');
     if(p.status==='REVIEW')action('Mirato pas shqyrtimit','APPROVE');

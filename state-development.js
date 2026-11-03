@@ -12,6 +12,7 @@ function stateDevelopmentRecords(st){
     // Canonical records take precedence over references in older municipal lists.
     (st.governmentCatalog?.projects||[]).forEach(function(p,i){include(p,'catalog','',i);});
     (st.developmentProjects||[]).forEach(function(p,i){include(p,'development','',i);});
+    Object.values(st.sectorManagement?.sectors||{}).forEach(function(row){row.buildings.forEach(function(p,i){include(p,'sector-management','',i);});});
     // Sector reforms remain owned by stateSectors; this is a read-only view.
     // Sharing a sector is not proof that two independent projects are duplicates.
     (st.stateSectors||[]).forEach(function(s,i){
@@ -52,6 +53,7 @@ function stateDevelopmentProjectList(){
         var action=r.source==='development' && p.status==='PROPOSED'?'<button class="action-btn btn-gold" onclick="openDevelopmentProjectModal('+e(JSON.stringify(p.id))+')">Plotëso dhe nis draftin</button>':'';
         return '<article class="candidate-card" data-development-id="'+e(r.key)+'"><h4>'+e(p.title||p.name||'Projekt pa titull')+'</h4><p>'+e(m?m.name:r.municipalityId||'Projekt shtetëror pa komunë të përcaktuar')+' · <strong>'+e(r.source==='development' && p.status==='PROPOSED'?'Draft — ende pa financim':stateDevelopmentStatus(p))+'</strong></p>'+action+(progress!==null?'<progress max="100" value="'+progress+'"></progress><p>Progresi: '+progress.toFixed(0)+'%</p>':'')+'<p>Kostoja: '+(Number.isFinite(cost)?'€'+cost.toFixed(2)+'M':'Nuk është regjistruar')+'<br>Nisja: '+e(stateDevelopmentDate(start,p.startDate))+(stateDevelopmentGroup(p)==='COMPLETED'?'<br>Përfundimi: '+e(stateDevelopmentDate(completed,p.completedDate)):'')+'</p><details><summary>Detajet e projektit</summary><p>'+e(p.desc||p.description||'Nuk ka përshkrim shtesë të regjistruar.')+'</p><p>Identifikuesi: '+e(p.id||p.projectId||'Pa identifikues në ruajtjen e vjetër')+(category?'<br>Kategoria: '+e(category):'')+'<br>Regjistrimi: '+e(stateDevelopmentDate(p.createdTurn??p.createdWeek,p.createdDate))+(p.fundingSource?'<br>Financimi: '+e(p.fundingSource):'')+'</p>'+(p.history||[]).map(function(h){return '<p>'+e(h.date||stateDevelopmentDate(h.turn))+' · '+e(h.note||h.text||stateDevelopmentStatus(h))+'</p>';}).join('')+(p.municipal14?'<button class="btn-top" onclick="openMunicipalProject14('+e(JSON.stringify(p.id))+')">Hap projektin komunal</button>':'')+'</details></article>';
     }).join('') || '<p>'+(rows.length?'Nuk ka projekte me këta filtra.':'Nuk ka projekte të regjistruara. Projektet ende të papropozuara në katalog nuk përfshihen në statistika.')+'</p>';
+    polishDevelopmentSurface(host);
 }
 function stateDevelopmentFilters(){
     var rows=stateDevelopmentRecords(state),e=catalogEscape,city=document.getElementById('developmentCityFilter')?.value||'',status=document.getElementById('developmentStatusFilter')?.value||'';
@@ -79,7 +81,7 @@ function renderMunicipalInfrastructure(mid){
     var known=metrics.filter(function(m){return data[m[0]]!==null;}).sort(function(a,b){return data[a[0]]-data[b[0]];});
     host.innerHTML='<h3>Infrastruktura komunale dhe uji</h3><p>Tregues aktualë të simulimit (baza fillestare është e simuluar), në shkallën 1–10; më lart do të thotë gjendje më e mirë. Nuk janë matje reale, përqindje mbulimi, kilometra ose m³ ujë.</p><label>Komuna<select id="infrastructureMunicipality" onchange="renderMunicipalInfrastructure(this.value)">'+state.municipalities.map(function(m){return '<option value="'+e(m.id)+'" '+(m.id===mid?'selected':'')+'>'+e(m.name)+'</option>';}).join('')+'</select></label><div class="grid-3">'+metrics.map(function(m){return '<article class="candidate-card"><strong>'+m[1]+'</strong><p data-infrastructure-metric="'+m[0]+'">'+(data[m[0]]===null?'Nuk është regjistruar':data[m[0]].toFixed(2)+' / 10')+'</p></article>';}).join('')+'</div><p>'+(known.length?'Nevojë relative sipas indekseve të modelit: '+known.filter(function(m){return data[m[0]]===data[known[0][0]];}).map(function(m){return m[1];}).join(', ')+'. Ky është krahasim i treguesve të komunës, jo diagnozë teknike e rrjetit.':'Nuk ka tregues të vlefshëm për të renditur nevojat.')+'</p><p>Shërbimi i ujit është agregat: modeli nuk dallon përqindjen e furnizimit me ujësjellës, kanalizimin dhe kapacitetin e trajtimit. Projektet e lidhjeve lokale përmirësojnë metrikën e përcaktuar në projekt; nuk krijojnë automatikisht rrjet rrugor.</p><h4>Modelet ekzistuese për këtë komunë</h4><div class="grid-2">'+(data.projects.map(municipal14Card).join('')||'<p>Nuk ka model uji/transporti në katalog për këtë komunë. Mund të propozoni projekt me formularin ekzistues më poshtë.</p>')+'</div><p>Modelet komunale me efekt gradual e japin përfitimin sipas progresit, jo të plotë në fillim. Hapni detajet për shumën, afatin dhe shërbimin e synuar.</p><div class="candidate-actions">'+(agendaExecutive()?'<button class="action-btn" onclick="openInfrastructureProject(\'ROAD\')">Projekto rrugë lokale</button><button class="action-btn" id="newMunicipalTransportProject" onclick="openInfrastructureProject(\'TRANSPORT\')">Projekto transport publik</button><button class="action-btn" onclick="openInfrastructureProject(\'WATER\')">Projekto ujësjellës dhe kanalizim</button>':'<p>Financimi dhe nisja kërkojnë autoritet qeveritar sipas rregullave ekzistuese.</p>')+'</div><h4>Projektet e regjistruara të infrastrukturës dhe ujit</h4>'+data.registered.map(municipalInfrastructureRecord).join('')+(data.registered.length?'':'<p>Ende pa projekte të regjistruara në këto kategori.</p>');
     host.innerHTML+=municipalEnergyProjectsHtml(data);
-    host.innerHTML+=municipalEnvironmentProjectsHtml(mid);
+    host.innerHTML+=municipalEnvironmentProjectsHtml(mid);polishDevelopmentSurface(host);
 }
 function municipalEnvironmentProjectsHtml(mid){
     var data=municipalServiceData(state,mid,'environment','ENVIRONMENT','services'),e=catalogEscape;
@@ -198,6 +200,7 @@ function renderMunicipalHealth(mid){
         return '<article class="candidate-card" data-health-record="'+e(r.key)+'"><h4>'+e(p.title||p.name)+'</h4><p>'+e(data.municipality.name)+' · '+e(draft?'Draft — ende pa financim':'Statusi fizik: '+stateDevelopmentStatus(p))+'</p><p>Kosto: '+(Number.isFinite(p.costB)?municipal14Money(p.costB):Number.isFinite(p.costM)?'€'+p.costM.toFixed(2)+'M':'Nuk është regjistruar')+' · Afati i planifikuar: '+(Number.isInteger(p.duration||p.weeksTotal)?(p.duration||p.weeksTotal)+' javë':'Nuk është regjistruar')+'</p><p>'+e(p.desc||p.description||'Pa përshkrim shtesë të regjistruar.')+'</p>'+(Number.isFinite(p.progress)?'<progress max="100" value="'+p.progress+'" aria-label="Progresi i projektit shëndetësor"></progress><p>Progresi: '+p.progress.toFixed(0)+'%</p>':'<p>Progresi nuk është regjistruar.</p>')+'<p>'+e(effect)+'</p>'+municipalEffectPresentation(p)+action+'</article>';
     }).join('');
     host.innerHTML='<h3>Shërbimet shëndetësore komunale</h3><label>Komuna e shërbimeve shëndetësore<select id="healthMunicipality" onchange="renderMunicipalHealth(this.value)">'+options+'</select></label><article class="candidate-card"><strong>Indeksi i simuluar i shëndetësisë</strong><p id="municipalHealthValue" role="status">'+(data.health===null?'Nuk është regjistruar':data.health.toFixed(2)+' / 10')+'</p><p>Shkalla 1–10; më lart do të thotë gjendje më e mirë në model. Nivelet fillestare janë të simuluara. Nuk mat përqindje mbulimi, pacientë, mjekë, shtretër ose rezultate klinike. Kënaqësia vendore është tregues tjetër.</p></article><h4>Modelet shëndetësore ekzistuese të komunës</h4><div class="grid-2">'+(templates||'<p>Nuk ka model shëndetësor në katalog për këtë komunë. Kjo nuk do të thotë se nuk ka nevoja shëndetësore.</p>')+'</div><div class="candidate-actions">'+(agendaExecutive()?'<button class="action-btn" id="newMunicipalHealthProject" onclick="openMunicipalHealthProject()">Projekto shërbim shëndetësor</button>':'<p>Miratimi dhe financimi kërkojnë autoritetin qeveritar ekzistues.</p>')+'</div><p>Formulari i përgjithshëm përdor llojin HEALTH dhe përfitime në përfundim. Projektet e katalogut ruajnë efektet graduale ose përfundimtare të kontratës së tyre.</p><h4>Projektet shëndetësore të regjistruara</h4><div class="grid-2">'+(registered||'<p>Ende pa projekte shëndetësore të regjistruara për këtë komunë.</p>')+'</div>';
+    polishDevelopmentSurface(host);
 }
 function openMunicipalHealthProject(){
     var mid=document.getElementById('healthMunicipality')?.value;
@@ -240,6 +243,7 @@ function renderMunicipalEducation(){
         return '<article class="candidate-card" data-education-record="'+e(r.key)+'"><h4>'+e(p.title||p.name)+'</h4><p>'+e(data.municipality.name)+' · '+e(draft?'Draft — ende pa financim':stateDevelopmentStatus(p))+'</p><p>Kosto: '+(Number.isFinite(p.costB)?municipal14Money(p.costB):Number.isFinite(p.costM)?'€'+p.costM.toFixed(2)+'M':'Nuk është regjistruar')+' · Afati: '+(Number.isInteger(p.duration||p.weeksTotal)?(p.duration||p.weeksTotal)+' javë':'Nuk është regjistruar')+'</p><p>'+e(p.desc||p.description||'Pa përshkrim të regjistruar.')+'</p>'+(Number.isFinite(p.progress)?'<progress max="100" value="'+p.progress+'" aria-label="Progresi i projektit arsimor"></progress><p>Progresi: '+p.progress.toFixed(0)+'%</p>':'<p>Progresi nuk është regjistruar.</p>')+'<p>'+e(municipalEducationEffectText(p))+'</p>'+action+'</article>';
     }).join(''):'';
     host.innerHTML='<h3>Kushtet arsimore komunale</h3><p>Komuna: <strong>'+e(data?data.municipality.name:'E papërzgjedhur')+'</strong>. Përdorni filtrin “Qyteti ose komuna” te lista “Projektet Zhvillimore”.</p><article class="candidate-card"><strong>Indeksi i simuluar i kushteve arsimore</strong><p id="municipalEducationValue" role="status">'+metric+'</p><p>Shkalla 1–10; më lart tregon kushte më të mira sipas modelit. Nivelet fillestare janë të simuluara. Nuk mat rezultate akademike, numër nxënësish, staf ose kapacitet shkollor.</p></article>'+(!data?'<p role="status">Zgjidhni një komunë për indeksin, formularin SCHOOL dhe projektet e regjistruara. Më poshtë janë të 13 modelet arsimore ekzistuese.</p>':'')+'<h4>Modelet arsimore ekzistuese'+(data?' të komunës':' — të gjitha komunat')+'</h4><div class="grid-2">'+(projects.map(card).join('')||'<p>Nuk ka model arsimor në katalog për këtë komunë. Kjo nuk provon mungesë nevojash arsimore.</p>')+'</div>'+(data && agendaExecutive()?'<div class="candidate-actions"><button class="action-btn" id="newMunicipalEducationProject" onclick="openMunicipalEducationProject()">Projekto kushte arsimore</button></div><p>Formulari SCHOOL përdor financimin ekzistues dhe efektet vetëm në përfundim. Drafti nuk kryen pagesë; nisja kërkon të gjitha metrikat e kontraktuara.</p>':'')+'<h4>Projektet arsimore të regjistruara</h4><div class="grid-2">'+(records||'<p>'+(data?'Ende pa projekte arsimore të regjistruara për këtë komunë.':'Përzgjidhni një komunë për të parë regjistrin e saj.')+'</p>')+'</div>';
+    polishDevelopmentSurface(host);
 }
 function openMunicipalEducationProject(){
     var mid=document.getElementById('developmentCityFilter')?.value;
@@ -255,3 +259,45 @@ function openMunicipalEducationProject(){
     document.getElementById('devProjPreview').innerHTML+='<p>Indeksi arsimor: deri +'+Math.round(cat.muniEducGain/5)+' pikë /10 vetëm në përfundim, me kufi 10. Drafti mund të ruhet pa pagesë.</p>'+(error?'<p role="status">'+catalogEscape(error)+'</p>':'');
     return true;
 }
+/* Presentation only: keep the existing project records and action handlers. */
+function developmentInfoHeading(node,host){
+    for(var current=node;current&&current!==host.parentElement;current=current.parentElement){
+        for(var previous=current.previousElementSibling;previous;previous=previous.previousElementSibling){
+            if(previous.matches('h2,h3,h4,h5,.card-title,strong'))return previous;
+            var heading=previous.querySelector('.development-heading > :first-child,.card-title');if(heading)return heading;
+        }
+        if(current===host)break;
+    }
+    return host.querySelector('h2,h3,h4,h5,.card-title');
+}
+function developmentInfo(heading,paragraph){
+    if(!heading)return;var row=heading.closest('.development-heading');
+    if(!row){row=document.createElement('div');row.className='development-heading';heading.before(row);row.append(heading);}
+    var info=row.querySelector(':scope > .development-info');
+    if(!info){info=document.createElement('details');info.className='development-info';var summary=document.createElement('summary');summary.textContent='ℹ️';summary.setAttribute('aria-label','Informacion për '+heading.textContent.trim());var copy=document.createElement('div');copy.className='development-info-copy';info.append(summary,copy);row.append(info);info.addEventListener('toggle',function(){if(info.open)document.querySelectorAll('.development-info[open]').forEach(other=>{if(other!==info)other.open=false;});});}
+    info.querySelector('.development-info-copy').append(paragraph);
+}
+function polishDevelopmentSurface(host){
+    if(!host?.querySelectorAll)return;host.classList.add('development-surface');
+    host.querySelectorAll('p').forEach(function(p){
+        if(p.closest('details,.development-empty')||p.getAttribute('role')==='status')return;
+        var text=p.textContent.trim();
+        if(/^(Ende pa|Nuk ka (?:projekte|model)|Përzgjidhni një komunë për të parë)/i.test(text)){
+            var box=document.createElement('div');box.className='development-empty';box.setAttribute('role','status');
+            var icon=document.createElement('span');icon.className='development-empty-icon';icon.setAttribute('aria-hidden','true');icon.innerHTML='<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z"/></svg>';
+            var title=document.createElement('strong');title.textContent=/model/i.test(text)?'Nuk ka modele për këtë komunë':/Përzgjidhni/i.test(text)?'Zgjidhni një komunë':'Ende pa projekte të regjistruara';var note=document.createElement('p');note.textContent=/filtra/i.test(text)?'Ndryshoni filtrat për të parë projektet.':'Projektet e reja do të shfaqen këtu.';box.append(icon,title,note);p.replaceWith(box);return;
+        }
+        if(p.querySelector('strong')){
+            Array.from(p.childNodes).forEach(function(n){if(n.nodeType===3&&/^\.\s/.test(n.textContent)&&n.textContent.trim().length>45){var note=document.createElement('p');note.textContent=n.textContent.replace(/^\.\s*/, '');n.remove();developmentInfo(developmentInfoHeading(p,host),note);}});return;
+        }
+        if(text.length>120&&!/^(Kosto|Nisja|Progresi|Statusi|Afati)/i.test(text)&&!p.id)developmentInfo(developmentInfoHeading(p,host),p);
+    });
+    host.querySelectorAll('.grid-2,.grid-3,#developmentProjectList').forEach(grid=>grid.classList.add('development-project-grid'));
+    host.querySelectorAll('.candidate-card').forEach(function(card){
+        card.classList.add('development-project-card');var parent=card.parentElement;
+        if(parent.classList.contains('development-project-grid')||!parent.matches('.card,[id$="Projects"]'))return;
+        var grid=document.createElement('div');grid.className='development-project-grid';card.before(grid);
+        for(var current=card;current&&current.matches('.candidate-card');){var next=current.nextElementSibling;grid.append(current);current=next;}
+    });
+}
+document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.development-info[open]').forEach(info=>{info.open=false;info.querySelector('summary').focus();});});
