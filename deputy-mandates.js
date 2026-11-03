@@ -134,6 +134,7 @@ function reconcileDeputyGovernment(){
     if(!deputyCommit(function(){syncDeputyGovernment();}))return false;showToast("U kontrolluan papajtueshmëritë. Vendet pa pasues mbeten në pritje.");return true;
 }
 function syncDeputyGovernment(){
+    state.ministries.forEach(m=>{if(m.coalitionNominee&&(m.minister!=='I/E paemëruar'||m.party!==m.coalitionNominee.partyId))delete m.coalitionNominee;});
     migrateDeputyMandates(state);var l=deputyLedger(state),identities=state.governmentFormed?deputyGovernmentIdentities():[];
     l.members.forEach(function(m){
         var posts=identities.filter(function(g){return g.candidateId?m.candidateId===g.candidateId:g.partyId===m.partyId && g.name===m.name && l.members.filter(function(n){return n.partyId===g.partyId && n.name===g.name;}).length===1;}).map(function(g){return g.post;});

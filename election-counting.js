@@ -32,6 +32,9 @@ function freezeCountPreparation(st,manifest){
     var config=st.electionCountConfiguration;validateCountConfiguration(st);
     manifest.countMetadata=JSON.parse(JSON.stringify(config?{subjects:config.subjects,genders:config.genders}:{subjects:{},genders:{}}));
     manifest.countMetadata=completeSimulationGenders(manifest.parties,manifest.countMetadata);
+    // A single seat cannot represent both genders; use the existing explicit
+    // simulation rounding rule while retaining every unknown gender as unknown.
+    manifest.countMetadata.genderPolicy=SIMULATED_GENDER_POLICY;
     manifest.preparedBallots=JSON.parse(JSON.stringify(draw.sampleBallots));
     manifest.parties.forEach(function(p){
         if(!draw.participants.includes(p.partyId))throw Error('Pjesëmarrësit nuk përputhen me shortin e ruajtur.');p.partyNumber=draw.partyNumbers[p.partyId];
@@ -104,6 +107,7 @@ function strictAssemblyIssues(report,cycle){
             parties.forEach(function(p){seats[p.partyId]=0;reserved[p.partyId]=0;});
             Object.entries(report.communityGuarantees).forEach(function(entry){var pool=allocateAssemblyPool(eligible.filter(function(p){return metadata.subjects[p.partyId].community===entry[0];}),entry[1],seats,cycle.seed,entry[0],true);seats=pool.seats;pool.awards.forEach(function(id){reserved[id]++;});});
             seats=allocateAssemblyPool(eligible,100,seats,cycle.seed,'GENERAL',true).seats;
+            if(typeof applyDiasporaSeatBonus==='function')applyDiasporaSeatBonus(seats,reserved,cycle,parties,eligible);
             if(report.mandates.some(function(p){return p.total!==seats[p.partyId] || p.guaranteed!==reserved[p.partyId];}))issues.push('Mandatet nuk përputhen me formulën e kontrolluar.');
             report.mandates.filter(function(p){return p.total;}).forEach(function(p){var result=parties.find(function(row){return row.partyId===p.partyId;}),check={warnings:[],legalChecks:{gender:{}}},expected=selectSimulatedAssemblyDeputies(result,p.total,metadata,cycle.seed,check).map(function(c){return c.candidateId;}).sort(),actual=report.deputies.filter(function(mp){return mp.partyId===p.partyId;}).map(function(mp){return mp.candidateId;}).sort();if(JSON.stringify(expected)!==JSON.stringify(actual) || !['CHECKED','EXEMPT','SIMULATED_SINGLE_SEAT'].includes(check.legalChecks.gender[p.partyId]))issues.push(p.partyId+': emrat ose kuota nuk përputhen me përzgjedhjen e kontrolluar.');});
         }catch(error){issues.push(error.message);}

@@ -91,6 +91,7 @@ function calculateAssemblyComposition(cycle,metadata) {
     var capacity=eligible.filter(function(p){return p.votes>0;}).reduce(function(n,p){return n+Math.max(0,p.candidates.length-seats[p.partyId]);},0),generalCount=Math.min(100,capacity);
     if(generalCount){var pool=allocateAssemblyPool(eligible,generalCount,seats,cycle.seed,"GENERAL",strict);seats=pool.seats;report.ties.push(...pool.ties);}
     if(generalCount<100)report.warnings.push((100-generalCount)+" mandate të përgjithshme mbeten të pazgjidhura sepse listat e lejuara nuk kanë kandidatë të mjaftueshëm.");
+    if(typeof applyDiasporaSeatBonus==='function')report.diasporaSwing=applyDiasporaSeatBonus(seats,guaranteed,cycle,parties,eligible);
     parties.forEach(function(p){
         var count=seats[p.partyId],category=categories[p.partyId];
         report.mandates.push({partyId:p.partyId,name:p.name,community:category,votes:p.votes,eligible:eligible.includes(p),general:count-guaranteed[p.partyId],guaranteed:guaranteed[p.partyId],total:count});

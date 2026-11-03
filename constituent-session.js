@@ -89,7 +89,7 @@ function constituentNominees(session,composition,office) {
         if (office==="SPEAKER") return mp.partyId===groups[0].partyId;
         if (["VICE_1","VICE_2","VICE_3"].includes(office)) {
             var index=Number(office.slice(-1))-1;
-            return mp.partyId===groups[index].partyId && (office!=="VICE_1" || ["M","F"].includes(mp.gender) && ["M","F"].includes(session.elected.SPEAKER.gender) && mp.gender!==session.elected.SPEAKER.gender);
+            return mp.partyId===groups[index].partyId && (office!=="VICE_1" || (!["M","F"].includes(mp.gender) || !["M","F"].includes(session.elected.SPEAKER?.gender) || mp.gender!==session.elected.SPEAKER.gender));
         }
         return mp.seatType==="GUARANTEED" && (office==="VICE_SERB" ? mp.community==="SERB" : !["GENERAL","SERB"].includes(mp.community));
     });
@@ -328,7 +328,8 @@ function renderConstituentSession() {
             var nominees=constituentNominees(s,c,office),groups=constituentGroups(c);
             var ownNomination=playerNominatesConstituent(state,s,c,office);
             html+='<h4>'+esc(constituentOfficeLabel(office))+'</h4>';
-            if(!nominees.length)html+='<p role="alert">'+(office==='VICE_1' && (!['M','F'].includes(s.elected.SPEAKER?.gender) || c.deputies.some(function(d){return !['M','F'].includes(d.gender);}))?'Mungojnë të dhëna gjinore të verifikuara për kontrollin e kandidaturave. Procedura mbetet në pritje; gjinia nuk caktohet nga emri dhe kushti nuk anashkalohet.':'Ende nuk është paraqitur një kandidat i vlefshëm për këtë post.')+'</p>';
+            if(office==='VICE_1'&&(!['M','F'].includes(s.elected.SPEAKER?.gender)||nominees.some(d=>!['M','F'].includes(d.gender))))html+='<p>Të dhënat gjinore janë të paplota. Kandidimi vazhdon pa hamendësuar gjininë.</p>';
+            if(!nominees.length)html+='<p role="alert">Ende nuk është paraqitur kandidat i vlefshëm për këtë post.</p>';
             else if(ownNomination) {
                 html+='<p>Propozimi për këtë post i takon partisë suaj. Zgjidhni një nga deputetët tuaj.</p>';
                 html+='<label>Kandidati<select id="constituentCandidate">'+nominees.map(function(mp){var party=c.mandates.find(function(p){return p.partyId===mp.partyId;});return '<option value="'+esc(mp.candidateId)+'">'+esc(candidateDisplayName(mp))+' · '+esc(mp.partyId)+' · '+party.total+' mandate</option>';}).join('')+'</select></label>';

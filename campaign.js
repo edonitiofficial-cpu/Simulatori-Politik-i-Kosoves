@@ -1,4 +1,5 @@
-/* Campaign-only rules of the simulation; no electoral results or government promises. */
+/* Campaign timing, activities and programme; post-election goals live in electoral-promises.js. */
+function campaignDuration(c){return c?.regular===true?4:3;}
 const CAMPAIGN_SECTORS = ["Ekonomi dhe punësim", "Arsim", "Shëndetësi", "Infrastrukturë", "Bujqësi", "Drejtësi", "Siguri", "Diplomaci dhe integrime evropiane", "Energji dhe mjedis", "Mirëqenie sociale", "Digjitalizim dhe administratë publike", "Zhvillim të komunave"];
 const CAMPAIGN_ACTIVITIES = {
     RALLY: { title:"Tubim publik", cost:12000, support:0.18, visibility:2, credibility:0 },
@@ -42,16 +43,16 @@ function migrateCampaignState(gameState) {
     var campaign=gameState.electionCampaign;
     if (!campaign || gameState.electionPhase === "NONE") return;
     if (typeof campaign.moduleVersion !== "undefined") return;
-    var elapsed=Number.isInteger(campaign.startWeek)?Math.max(0,Math.min(3,gameState.turnCount-campaign.startWeek)):0;
+    var duration=campaignDuration(campaign),elapsed=Number.isInteger(campaign.startWeek)?Math.max(0,Math.min(duration,gameState.turnCount-campaign.startWeek)):0;
     campaign.legacyTiming={duration:campaign.campaignDurationWeeks == null ? null:campaign.campaignDurationWeeks,remaining:campaign.weeksRemaining == null?null:campaign.weeksRemaining};
     if(typeof campaign.startWeek === "undefined") campaign.startWeek=gameState.turnCount;
     campaign.moduleVersion=3;
-    campaign.campaignDurationWeeks=3; campaign.weeksRemaining=Math.max(0,3-elapsed);
-    campaign.status=elapsed>=3?"READY":"ACTIVE";
+    campaign.campaignDurationWeeks=duration; campaign.weeksRemaining=Math.max(0,duration-elapsed);
+    campaign.status=elapsed>=duration?"READY":"ACTIVE";
     campaign.elapsedWeeks=elapsed; campaign.lastProcessedTurn=gameState.turnCount;
     campaign.startCalendar=campaignCalendarOffset(gameState,-elapsed);
-    campaign.electionCalendar=campaignCalendarOffset(campaign.startCalendar,3);
-    campaign.electionTurn=campaign.startWeek+3;
+    campaign.electionCalendar=campaignCalendarOffset(campaign.startCalendar,duration);
+    campaign.electionTurn=campaign.startWeek+duration;
     if(typeof campaign.activities === "undefined") campaign.activities=[];
     if(typeof campaign.debates === "undefined") campaign.debates=[];
     if(typeof campaign.polls === "undefined") campaign.polls=[];
@@ -71,16 +72,17 @@ function validateCampaignState(gameState) {
     if(!campaign) return;
     ["activities","debates","polls","programme","events"].forEach(function(key){if(typeof campaign[key]!=="undefined"&&!Array.isArray(campaign[key]))throw Error("Të dhënat e fushatës janë të dëmtuara: "+key);});
     if(typeof campaign.moduleVersion==="undefined") return;
-    if(campaign.moduleVersion!==3 || !["ACTIVE","READY","CLOSED"].includes(campaign.status) || campaign.campaignDurationWeeks!==3 ||
-        !Number.isInteger(campaign.elapsedWeeks) || campaign.elapsedWeeks<0 || campaign.elapsedWeeks>3 ||
+    var duration=campaignDuration(campaign);if(campaign.regular!==undefined&&typeof campaign.regular!=='boolean')throw Error('Lloji i fushatës është i pavlefshëm.');
+    if(campaign.moduleVersion!==3 || !["ACTIVE","READY","CLOSED"].includes(campaign.status) || campaign.campaignDurationWeeks!==duration ||
+        !Number.isInteger(campaign.elapsedWeeks) || campaign.elapsedWeeks<0 || campaign.elapsedWeeks>duration ||
         !Number.isInteger(campaign.lastProcessedTurn) || !Number.isInteger(campaign.startWeek)) throw Error("Gjendja e fushatës është e pavlefshme");
     ["startCalendar","electionCalendar"].forEach(function(key){var calendar=campaign[key];if(!calendar||!Number.isInteger(calendar.year)||calendar.year<1||!Number.isInteger(calendar.monthIndex)||calendar.monthIndex<0||calendar.monthIndex>11||!Number.isInteger(calendar.week)||calendar.week<1||calendar.week>4)throw Error("Kalendari i fushatës është i pavlefshëm");});
-    if(campaign.startWeek<1 || campaign.weeksRemaining!==3-campaign.elapsedWeeks || campaign.electionTurn!==campaign.startWeek+3 ||
+    if(campaign.startWeek<1 || campaign.weeksRemaining!==duration-campaign.elapsedWeeks || campaign.electionTurn!==campaign.startWeek+duration ||
         !Number.isFinite(campaign.visibility)||campaign.visibility<0||campaign.visibility>100||
         !Number.isFinite(campaign.credibility)||campaign.credibility<0||campaign.credibility>100||
         !Number.isInteger(campaign.promiseCounter)||campaign.promiseCounter<0||
-        (campaign.status==="ACTIVE"&&campaign.elapsedWeeks===3)||
-        (campaign.status!=="ACTIVE"&&campaign.elapsedWeeks!==3))throw Error("Progresi i fushatës është i pavlefshëm");
+        (campaign.status==="ACTIVE"&&campaign.elapsedWeeks===duration)||
+        (campaign.status!=="ACTIVE"&&campaign.elapsedWeeks!==campaignDuration(campaign)))throw Error("Progresi i fushatës është i pavlefshëm");
     if(!Array.isArray(campaign.programme)||!Array.isArray(campaign.events)||!Array.isArray(campaign.activities)||!Array.isArray(campaign.polls)||!latestCampaignPoll(campaign))throw Error("Mungojnë të dhënat e fushatës");
     campaign.programme.forEach(function(promise){if(!promise || typeof promise.title!=="string" || typeof promise.description!=="string" || !CAMPAIGN_SECTORS.includes(promise.sector) || !["ACTIVE","FULFILLED","UNFULFILLED"].includes(promise.status) || (promise.estimatedCost!==null && (!Number.isFinite(promise.estimatedCost)||promise.estimatedCost<0)))throw Error("Premtimi zgjedhor është i dëmtuar");});
     // Historical polls retain the participant set from before the new legislature was activated.
@@ -90,7 +92,7 @@ function validateCampaignState(gameState) {
 }
 function campaignIsActive() {
     var campaign=state.electionCampaign;
-    return state.electionPhase==="CAMPAIGN" && campaign && campaign.moduleVersion===3 && campaign.status==="ACTIVE" && campaign.elapsedWeeks<3;
+    return state.electionPhase==="CAMPAIGN" && campaign && campaign.moduleVersion===3 && campaign.status==="ACTIVE" && campaign.elapsedWeeks<campaignDuration(campaign);
 }
 function recordCampaignShift(partyId,amount,reason) {
     var campaign=state.electionCampaign, previous=latestCampaignPoll(campaign), values=Object.assign({},previous.values);
@@ -138,7 +140,7 @@ function performCampaignActivity(type) {
 function processCampaignWeek() {
     var campaign=state.electionCampaign;
     if(!campaignIsActive()||campaign.lastProcessedTurn>=state.turnCount)return;
-    var elapsed=Math.min(3,Math.max(0,state.turnCount-campaign.startWeek));
+    var duration=campaignDuration(campaign),elapsed=Math.min(duration,Math.max(0,state.turnCount-campaign.startWeek));
     if(elapsed<=campaign.elapsedWeeks)return;
     campaign.lastProcessedTurn=state.turnCount;
     // Programme impact is applied once per elapsed week, capped irrespective of promise count.
@@ -154,12 +156,12 @@ function processCampaignWeek() {
     var title="Zhvillim në fushatë: "+event.title+" ("+state.parties[target].short+")";
     campaign.events.push({template:template,turn:state.turnCount,title:title,partyId:target,shift:event.shift});
     recordCampaignShift(target,event.shift,title);
-    campaign.elapsedWeeks=elapsed;campaign.weeksRemaining=3-elapsed;
-    if(elapsed>=3){campaign.status="READY";showToast("Tri javët përfunduan. Kontrolloni përmbledhjen dhe përfundoni fushatën.");}
+    campaign.elapsedWeeks=elapsed;campaign.weeksRemaining=duration-elapsed;
+    if(elapsed>=duration){campaign.status="READY";showToast(duration+" javët përfunduan. Kontrolloni përmbledhjen dhe përfundoni fushatën.");}
 }
 function finishCampaign() {
     var campaign=state.electionCampaign;
-    if(state.electionPhase!=="CAMPAIGN"||!campaign||campaign.status!=="READY"||campaign.elapsedWeeks!==3)return false;
+    if(state.electionPhase!=="CAMPAIGN"||!campaign||campaign.status!=="READY"||campaign.elapsedWeeks!==campaignDuration(campaign))return false;
     campaign.status="CLOSED";campaign.closedAt={year:state.year,monthIndex:state.monthIndex,week:state.week,turnCount:state.turnCount};
     state.electionPhase="CAMPAIGN_CLOSED";
     var previousCycles=(state.parliamentaryElections || []).slice();
@@ -177,10 +179,11 @@ function renderCampaignPanel() {
     var enabled=campaign&&campaign.moduleVersion===3&&["CAMPAIGN","CAMPAIGN_CLOSED"].includes(state.electionPhase);
     var pill=document.getElementById("campaignTabBtn");if(pill)pill.disabled=!enabled;
     if(!enabled){host.innerHTML='<p>Fushata zgjedhore aktivizohet vetëm pas shpalljes së zgjedhjeve parlamentare.</p>';var inactiveForm=document.getElementById("campaignPromiseForm");if(inactiveForm)inactiveForm.hidden=true;return;}
-    var active=campaignIsActive(),week=Math.min(3,campaign.elapsedWeeks+1),names=["Nisja e fushatës","Intensifikimi i fushatës","Përmbyllja e fushatës"];
+    var duration=campaignDuration(campaign),active=campaignIsActive(),week=Math.min(duration,campaign.elapsedWeeks+1),names=["Nisja e fushatës","Intensifikimi i fushatës","Përmbyllja e fushatës"];
+    if(duration===4)names.splice(2,0,"Debatet zgjedhore");
     var party=state.parties[state.playerParty];
     var latest=latestCampaignPoll(campaign),previous=campaign.polls.filter(function(poll){return poll&&poll.values;}).slice(-2)[0];
-    host.innerHTML='<div class="card"><div class="card-header"><div class="card-title">Fushata zgjedhore</div><span class="tag tag-gold">'+(campaign.status==="CLOSED"?'E mbyllur':campaign.status==="READY"?'Gati për përmbyllje':'Java '+week+' — '+names[week-1])+'</span></div><p>'+electoralEscape(party.name)+' · '+Math.max(0,campaign.weeksRemaining*7)+' ditë të mbetura</p><p>Zgjedhjet: '+campaignCalendarLabel(campaign.electionCalendar)+' · kalendari ekzistues me 4 javë në muaj.</p><progress max="3" value="'+campaign.elapsedWeeks+'" aria-label="Progresi i fushatës"></progress><p>Fondi i partisë: €'+party.partyFunds.toLocaleString('sq-AL')+' · Dukshmëria: '+campaign.visibility+'/100 · Besueshmëria: '+campaign.credibility+'/100</p>'+
+    host.innerHTML='<div class="card"><div class="card-header"><div class="card-title">Fushata zgjedhore</div><span class="tag tag-gold">'+(campaign.status==="CLOSED"?'E mbyllur':campaign.status==="READY"?'Gati për përmbyllje':'Java '+week+' — '+names[week-1])+'</span></div><p>'+electoralEscape(party.name)+' · '+Math.max(0,campaign.weeksRemaining*7)+' ditë të mbetura</p><p>Zgjedhjet: '+campaignCalendarLabel(campaign.electionCalendar)+' · kalendari ekzistues me 4 javë në muaj.</p><progress max="'+duration+'" value="'+campaign.elapsedWeeks+'" aria-label="Progresi i fushatës"></progress><p>Fondi i partisë: €'+party.partyFunds.toLocaleString('sq-AL')+' · Dukshmëria: '+campaign.visibility+'/100 · Besueshmëria: '+campaign.credibility+'/100</p>'+
         (active?'<button class="action-btn btn-gold" onclick="advanceCampaignWeek()">Vazhdo një javë</button>':'')+
         (campaign.status==="READY"?'<button id="finishCampaignBtn" class="action-btn btn-success" onclick="finishCampaign()">Përfundo fushatën</button>':'')+'</div>'+
         '<div class="card"><h3>Programi zgjedhor</h3>'+campaignPromiseHtml(campaign)+'</div>'+

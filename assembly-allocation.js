@@ -128,6 +128,7 @@ function calculateLegacyAssemblyComposition(cycle, metadata) {
         var general = allocateAssemblyPool(eligible,ASSEMBLY_RULES.general,seats,cycle.seed,"GENERAL");
         seats = general.seats; report.ties = report.ties.concat(general.ties);
     } catch (error) { report.errors.push(error.message); return report; }
+    if(typeof applyDiasporaSeatBonus==='function')report.diasporaSwing=applyDiasporaSeatBonus(seats,guaranteed,cycle,parties,eligible);
     parties.forEach(function(p) {
         var subject = metadata.subjects[p.partyId], count = seats[p.partyId];
         report.mandates.push({partyId:p.partyId,name:p.name,community:subject.community,votes:p.votes,eligible:eligible.includes(p),general:count-guaranteed[p.partyId],guaranteed:guaranteed[p.partyId],total:count});

@@ -170,7 +170,7 @@ function economicEnergyBalance(production,demand,capacity,c,m){
     return {capacity:capacity,production:production,demand:demand,imports:imports,exports:exports,available:available,consumed:consumed,curtailment:curtailment,shortageUnits:shortageUnits,shortage:shortage,cost:mixedCost*(1+c.shortagePremium*shortage)};
 }
 function economicPilotActive(st){return !!st.economicPilot;}
-function economicSector(st,id){return (st.stateSectors||[]).find(function(s){return s.id===id;})?.score||0;}
+function economicSector(st,id){if(typeof unionOnStrike==='function'&&unionOnStrike(st,id))return 0;if(id==='sec_justice'&&typeof justiceReformCompleted==='function'&&justiceReformCompleted(st))return 100;return (st.stateSectors||[]).find(function(s){return s.id===id;})?.score||0;}
 function economicApproach(value,target,step){return fiscalRound(value+clamp(target-value,-step,step));}
 function validateEconomicPilot(st){
     var p=st.economicPilot;if(p===undefined)return;
@@ -181,6 +181,7 @@ function validateEconomicPilot(st){
     ['output','wageIndex','revenueAdjustmentB'].forEach(function(k){if(!Number.isFinite(p[k]) || k!=='revenueAdjustmentB' && p[k]<0)throw Error('Treguesi i pilotit është i pavlefshëm: '+k);});
     ['revenueB','energyScore','industryScore','stability','employment'].forEach(function(k){if(!Number.isFinite(p.baseline[k]) || p.baseline[k]<0)throw Error('Baza ekonomike është e pavlefshme.');});
     if(p.output>150 || p.wageIndex>200 || p.baseline.energyScore>100 || p.baseline.industryScore>100 || p.baseline.employment>100 || p.baseline.stability>100)throw Error('Baza e punësimit ose energjisë është e pavlefshme.');
+    ['fdiEmploymentAtBaseline','fdiCapacityAtBaseline'].forEach(function(key){if(p[key]!==undefined && (!Number.isFinite(p[key]) || p[key]<0 || p[key]>100))throw Error('Baza e Mega-Projekteve është e pavlefshme.');});
     if(p.energyMarket!==undefined)validateEconomicMarket(p.energyMarket);
     if(p.growthWindow!==undefined && (!p.growthWindow || !Array.isArray(p.growthWindow.values) || p.growthWindow.values.length!==FISCAL_WEEKS || p.growthWindow.values.some(function(v){return !Number.isFinite(v) || v<0 || v>150;}) || !Number.isFinite(p.growthWindow.contribution) || Math.abs(p.growthWindow.contribution)>150))throw Error('Dritarja vjetore e aktivitetit është e pavlefshme.');
     ECONOMIC_TAX_KEYS.forEach(function(k){if(!Number.isFinite(p.effectiveRates[k]) || p.effectiveRates[k]<0 || p.effectiveRates[k]>100 || !Number.isFinite(p.baseline.rates?.[k]) || p.baseline.rates[k]<0 || p.baseline.rates[k]>100 || !Number.isFinite(p.baseline.bases?.[k]) || p.baseline.bases[k]<0)throw Error('Baza ose norma tatimore e pilotit është e pavlefshme.');});
@@ -198,7 +199,7 @@ function enableEconomicPilot(){
         // Zero rates cannot explain a positive calibrated receipt: keep that part
         // as an explicit legacy residual rather than divide by zero or invent tax.
         var represented=ECONOMIC_TAX_KEYS.reduce(function(s,k){return s+bases[k]*rates[k]/100;},0);
-        state.economicPilot={version:1,lastTurn:state.turnCount,config:Object.assign({},ECONOMIC_PILOT_DEFAULTS),baseline:{revenueB:state.taxRevenueB,energyScore:economicSector(state,'sec_energy'),industryScore:economicSector(state,'sec_econ'),stability:state.energyStability,employment:100-state.unemployment,rates:rates,bases:bases},effectiveRates:Object.assign({},rates),output:100,wageIndex:100,revenueAdjustmentB:state.taxRevenueB-represented,history:[]};
+        state.economicPilot={version:1,lastTurn:state.turnCount,config:Object.assign({},ECONOMIC_PILOT_DEFAULTS),baseline:{revenueB:state.taxRevenueB,energyScore:economicSector(state,'sec_energy'),industryScore:economicSector(state,'sec_econ'),stability:state.energyStability,employment:100-state.unemployment,rates:rates,bases:bases},effectiveRates:Object.assign({},rates),output:100,wageIndex:100,revenueAdjustmentB:state.taxRevenueB-represented,history:[],fdiEmploymentAtBaseline:typeof foreignInvestmentEmploymentBoost==='function'?foreignInvestmentEmploymentBoost(state):0,fdiCapacityAtBaseline:typeof foreignInvestmentCapacityBoost==='function'?foreignInvestmentCapacityBoost(state):0};
         state.historyLog.unshift(state.year+' [Ekonomia]: U aktivizua piloti me indekse të kalibruara; nuk u ndryshua arka ose historiku fiskal.');
     });
 }
@@ -236,6 +237,7 @@ function processEconomicPilotWeek(turn){
     var demand=100*(.6+.4*energyActivity/100),energy=economicEnergyBalance(production,demand,capacity,c,economicMarketConfig(p)),shortage=energy.shortage,energyCost=energy.cost;
     var households=x?.households?householdDemand(state,p.effectiveRates,100-state.unemployment,p.wageIndex,energyCost):null;
     var industrialCapacity=100*clamp(1+(economicSector(state,'sec_econ')-b.industryScore)*c.industrialCapacityPerPoint,.5,1.5);
+    if(typeof foreignInvestmentCapacityBoost==='function')industrialCapacity=clamp(industrialCapacity+foreignInvestmentCapacityBoost(state)-(p.fdiCapacityAtBaseline||0),0,150);
     var target=industrialCapacity*(1-shortage)/Math.max(.25,1+c.costSensitivity*(energyCost/100-1));
     if(x)target=Math.min(target,productiveSalesCapacity(state,'industry',households));
     // Adjustment is gradual while installed capacity permits it. A loss of
@@ -250,6 +252,7 @@ function processEconomicPilotWeek(turn){
         productive={activity:economicActivity(p),agricultureOutput:x.agricultureOutput,agricultureCapacity:ac,agriculturePotential:ap,industrialPotential:clamp(target,0,industrialCapacity),industryUtilization:industrialCapacity>0?p.output/industrialCapacity*100:0,agricultureUtilization:ac>0?x.agricultureOutput/ac*100:0,industryLaborDemand:100*Math.pow(p.output/100,c.employmentElasticity),agricultureLaborDemand:100*Math.pow(x.agricultureOutput/100,c.employmentElasticity),industrialCost:100*Math.max(.25,1+c.costSensitivity*(energyCost/100-1)),agricultureCost:100*Math.max(.25,1+x.config.agricultureCostSensitivity*(energyCost/100-1)),agricultureChange:x.agricultureOutput-previousAgriculture};
     }
     var activity=economicActivity(p),employment=100-state.unemployment,targetEmployment=clamp(b.employment*Math.pow(activity/100,c.employmentElasticity),0,100);
+    if(typeof foreignInvestmentEmploymentBoost==='function')targetEmployment=clamp(targetEmployment+foreignInvestmentEmploymentBoost(state)-(p.fdiEmploymentAtBaseline||0),0,100);
     employment=economicApproach(employment,targetEmployment,c.employmentStep);state.unemployment=fiscalRound(100-employment);
     p.wageIndex=economicApproach(p.wageIndex,100*Math.pow(activity/100,c.wageElasticity),c.wageStep);
     // Rolling annual activity contribution; keep independent macro effects.

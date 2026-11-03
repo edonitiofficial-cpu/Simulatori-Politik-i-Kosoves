@@ -14,7 +14,7 @@ function electionDayCycleId(gameState) {
 function electionDayEligible(gameState) {
     var campaign=gameState.electionCampaign;
     return !!campaign && campaign.moduleVersion===3 && campaign.status==="CLOSED" &&
-        campaign.elapsedWeeks===3 && campaign.weeksRemaining===0 &&
+        campaign.elapsedWeeks===campaignDuration(campaign) && campaign.weeksRemaining===0 &&
         Number.isInteger(campaign.electionTurn) && gameState.turnCount>=campaign.electionTurn &&
         gameState.electionPhase==="CAMPAIGN_CLOSED";
 }
@@ -86,7 +86,7 @@ function buildElectionDayManifest(gameState) {
             events:campaign.events.length,visibility:campaign.visibility,credibility:campaign.credibility,
             pollObservations:observations.length},preferenceModel:'SIMULATED_UP_TO_TEN',
         legalConfirmed:false};
-    freezeCountPreparation(gameState,manifest);return manifest;
+    freezeCountPreparation(gameState,manifest);if(campaign.northMandate)manifest.northMandate=JSON.parse(JSON.stringify(campaign.northMandate));var sovereignPolicy=claimSovereignElection(gameState,manifest);if(sovereignPolicy)manifest.sovereignSupport=sovereignPolicy;var highwayPolicy=claimHighwayElection(gameState,manifest);if(highwayPolicy)manifest.highwaySupport=highwayPolicy;var boardPolicy=claimEnterpriseBoardElection(gameState,manifest);if(boardPolicy)manifest.enterpriseBoardBase=boardPolicy;var associationPolicy=claimAssociationElectionPolicy(gameState,manifest);if(associationPolicy)manifest.associationVerdict=associationPolicy;return manifest;
 }
 
 function prepareElectionDayCycle(gameState) {
@@ -96,6 +96,8 @@ function prepareElectionDayCycle(gameState) {
     if(!electionDayEligible(gameState))return null;
     // Freeze inputs once, including names and nominations; later roster edits cannot change votes.
     var manifest=buildElectionDayManifest(gameState);
+    var embassy=claimDiasporaElectionBonus(gameState,'NATIONAL',manifest.cycleId,manifest.parties.map(p=>p.partyId));if(embassy)manifest.embassyMobilization=embassy;
+    if(typeof freezeDiasporaPolicy==='function')manifest.diasporaPolicy=freezeDiasporaPolicy(gameState,manifest);
     var cycle={id:manifest.cycleId,manifest:manifest,seed:electionSeed(JSON.stringify(manifest)),
         status:"READY",votingProgress:0,countingProgress:0,results:null,
         openedAt:null,closedAt:null,completedAt:null};
@@ -123,7 +125,12 @@ function generateElectionDayResults(cycle) {
         var credibility=1+Math.max(-0.015,Math.min(0.015,(party.credibility-50)*0.0005));
         return Math.max(0,support*performance*credibility*(1+(random()-0.5)*0.016));
     });
-    var votes=distributeElectionVotes(valid,weights);
+    var votes=distributeElectionVotes(valid,weights);votes=embassyAdjustedVotes(manifest.parties.map(p=>p.partyId),votes,valid,manifest.embassyMobilization,manifest.parties.map(p=>(manifest.preparedBallots||[]).filter(b=>b.partyId===p.partyId).length));
+    votes=northGuaranteedVotes(manifest.parties.map(p=>p.partyId),votes,valid,manifest.northMandate,manifest.parties.map(p=>(manifest.preparedBallots||[]).filter(b=>b.partyId===p.partyId).length));
+    votes=enterpriseBoardElectionVotes(manifest.parties.map(p=>p.partyId),votes,valid,manifest.enterpriseBoardBase,manifest.parties.map(p=>(manifest.preparedBallots||[]).filter(b=>b.partyId===p.partyId).length));
+    votes=enterpriseBoardElectionVotes(manifest.parties.map(p=>p.partyId),votes,valid,manifest.highwaySupport,manifest.parties.map(p=>(manifest.preparedBallots||[]).filter(b=>b.partyId===p.partyId).length));
+    votes=enterpriseBoardElectionVotes(manifest.parties.map(p=>p.partyId),votes,valid,manifest.sovereignSupport,manifest.parties.map(p=>(manifest.preparedBallots||[]).filter(b=>b.partyId===p.partyId).length));
+    votes=associationElectionVotes(manifest.parties.map(p=>p.partyId),votes,valid,manifest.associationVerdict,manifest.parties.map(p=>(manifest.preparedBallots||[]).filter(b=>b.partyId===p.partyId).length));
     var parties=manifest.parties.map(function(party,index){
         var partyVotes=votes[index],assigned=party.candidates.length?Math.floor(partyVotes*ELECTION_DAY_MODEL.preferenceParticipation):0;
         var candidateWeights=party.candidates.map(function(candidate){return (1/(1+0.04*(candidate.ballotPosition-1)))*(0.9+random()*0.2);});
@@ -161,7 +168,7 @@ function syncElectionDayAnimation() {
 }
 
 function openElectionDayPanel() {
-    if(!electionDayEligible(state)){showToast("Dita e zgjedhjeve kërkon fushatë të mbyllur dhe tri javë të përfunduara.");return false;}
+    if(!electionDayEligible(state)){showToast('Dita e zgjedhjeve kërkon fushatë të mbyllur dhe '+campaignDuration(state.electionCampaign)+' javë të përfunduara.');return false;}
     switchMainTab("tab-elections");
     switchSubTab("elec","voting",document.getElementById("electionDayTabBtn"));
     return true;
@@ -186,7 +193,7 @@ function advanceElectionDayProcess() {
     var beforeState=JSON.stringify(state);
     var previous={status:cycle.status,votingProgress:cycle.votingProgress,countingProgress:cycle.countingProgress,completedAt:cycle.completedAt};
     if(cycle.status==="VOTING")cycle.votingProgress=Math.min(100,cycle.votingProgress+10);
-    else {cycle.countingProgress=Math.min(100,cycle.countingProgress+10);if(cycle.countingProgress===100){cycle.status="RESULTS";cycle.completedAt=electionDayStamp();}}
+    else {var domesticAlreadyComplete=cycle.countingProgress===100;cycle.countingProgress=Math.min(100,cycle.countingProgress+10);if(cycle.countingProgress===100 && (typeof advanceDiasporaCount!=='function'||advanceDiasporaCount(cycle,domesticAlreadyComplete))){cycle.status="RESULTS";cycle.completedAt=electionDayStamp();}}
     if(cycle.status==="RESULTS")reconcilePostElection(state);
     if(!saveGameAuto()){state=JSON.parse(beforeState);stopElectionDayAnimation();return false;}
     if(cycle.status==="RESULTS"){
@@ -233,6 +240,7 @@ function renderElectionDayPanel() {
             results.parties.map(function(party){return '<article class="candidate-card election-party-result" data-result-party="'+electoralEscape(party.partyId)+'"><strong>'+party.rank+'. '+electoralEscape(party.name)+'</strong><p>'+Math.floor(party.votes*fraction).toLocaleString('sq-AL')+' vota · '+(party.percentage*fraction).toFixed(2)+'%</p><div class="prog-track"><div class="prog-fill election-result-bar" style="width:'+(party.percentage*fraction)+'%"></div></div>'+
                 (cycle.status==="RESULTS"?'<small>Diferenca nga partia paraprake: '+party.gapVotes.toLocaleString('sq-AL')+' vota · '+party.gapPercentage.toFixed(2)+' pikë përqindjeje</small><details class="election-candidate-results"><summary>Rezultatet e kandidatëve — '+electoralEscape(party.partyId)+' ('+party.candidates.length+')</summary><p>Model i simuluar. Preferencat sipas versionit të ruajtur të këtij cikli. Vota pa preferencë të caktuar: '+party.unassignedPreferenceVotes.toLocaleString('sq-AL')+'</p>'+party.candidates.map(function(candidate){return '<p data-candidate-party="'+electoralEscape(candidate.partyId)+'">'+candidate.rank+'. #'+candidate.listNumber+' '+electoralEscape(candidateDisplayName(candidate,party.partyId))+' — '+candidate.personalVotes.toLocaleString('sq-AL')+' vota personale të simuluara</p>';}).join('')+'</details>':'')+'</article>';}).join('')+'<p>Mandatet dhe deputetët paraqiten në panelin «Përbërja e Kuvendit».</p></div>';
     }
+    if(cycle.manifest.diasporaPolicy && cycle.countingProgress===100)html+='<div class="card" id="diasporaCountStage"><h3>Numërimi i votave nga jashtë</h3><progress max="100" value="'+(cycle.diasporaCount?.progress||0)+'"></progress><p>'+(cycle.diasporaCount?.counted?'Numërimi përfundoi. Bonusi i simuluar i mandateve: '+cycle.manifest.diasporaPolicy.bonus:'Numërimi vazhdon…')+'</p></div>';
     if(cycle.status==='RESULTS' && cycle.manifest.modelVersion===2)html+=countingReportHtml(cycle);
     if(cycle.status==="RESULTS") html+='<button id="viewAssemblyCompositionBtn" class="action-btn btn-gold" onclick="openAssemblyComposition()">Përbërja e Kuvendit — kontrollo mandatet</button>';
     host.innerHTML=html;
