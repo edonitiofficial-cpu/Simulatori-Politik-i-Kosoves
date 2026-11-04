@@ -199,7 +199,7 @@ function enableEconomicPilot(){
         // Zero rates cannot explain a positive calibrated receipt: keep that part
         // as an explicit legacy residual rather than divide by zero or invent tax.
         var represented=ECONOMIC_TAX_KEYS.reduce(function(s,k){return s+bases[k]*rates[k]/100;},0);
-        state.economicPilot={version:1,lastTurn:state.turnCount,config:Object.assign({},ECONOMIC_PILOT_DEFAULTS),baseline:{revenueB:state.taxRevenueB,energyScore:economicSector(state,'sec_energy'),industryScore:economicSector(state,'sec_econ'),stability:state.energyStability,employment:100-state.unemployment,rates:rates,bases:bases},effectiveRates:Object.assign({},rates),output:100,wageIndex:100,revenueAdjustmentB:state.taxRevenueB-represented,history:[],fdiEmploymentAtBaseline:typeof foreignInvestmentEmploymentBoost==='function'?foreignInvestmentEmploymentBoost(state):0,fdiCapacityAtBaseline:typeof foreignInvestmentCapacityBoost==='function'?foreignInvestmentCapacityBoost(state):0};
+        state.economicPilot={version:1,lastTurn:state.turnCount,config:Object.assign({},ECONOMIC_PILOT_DEFAULTS),baseline:{revenueB:state.taxRevenueB,energyScore:economicSector(state,'sec_energy'),industryScore:economicSector(state,'sec_econ'),stability:state.energyStability,employment:100-state.unemployment,rates:rates,bases:bases},effectiveRates:Object.assign({},rates),output:100,wageIndex:100,revenueAdjustmentB:state.taxRevenueB-represented,history:[],sectorEmploymentAtBaseline:sectorExpansionJobs(state),sectorGrowthAtBaseline:sectorExpansionGrowth(state),fdiEmploymentAtBaseline:typeof foreignInvestmentEmploymentBoost==='function'?foreignInvestmentEmploymentBoost(state):0,fdiCapacityAtBaseline:typeof foreignInvestmentCapacityBoost==='function'?foreignInvestmentCapacityBoost(state):0};
         state.historyLog.unshift(state.year+' [Ekonomia]: U aktivizua piloti me indekse të kalibruara; nuk u ndryshua arka ose historiku fiskal.');
     });
 }
@@ -238,6 +238,7 @@ function processEconomicPilotWeek(turn){
     var households=x?.households?householdDemand(state,p.effectiveRates,100-state.unemployment,p.wageIndex,energyCost):null;
     var industrialCapacity=100*clamp(1+(economicSector(state,'sec_econ')-b.industryScore)*c.industrialCapacityPerPoint,.5,1.5);
     if(typeof foreignInvestmentCapacityBoost==='function')industrialCapacity=clamp(industrialCapacity+foreignInvestmentCapacityBoost(state)-(p.fdiCapacityAtBaseline||0),0,150);
+    industrialCapacity=clamp(industrialCapacity+sectorExpansionGrowth(state)-(p.sectorGrowthAtBaseline||0),0,180);
     var target=industrialCapacity*(1-shortage)/Math.max(.25,1+c.costSensitivity*(energyCost/100-1));
     if(x)target=Math.min(target,productiveSalesCapacity(state,'industry',households));
     // Adjustment is gradual while installed capacity permits it. A loss of
@@ -252,6 +253,7 @@ function processEconomicPilotWeek(turn){
         productive={activity:economicActivity(p),agricultureOutput:x.agricultureOutput,agricultureCapacity:ac,agriculturePotential:ap,industrialPotential:clamp(target,0,industrialCapacity),industryUtilization:industrialCapacity>0?p.output/industrialCapacity*100:0,agricultureUtilization:ac>0?x.agricultureOutput/ac*100:0,industryLaborDemand:100*Math.pow(p.output/100,c.employmentElasticity),agricultureLaborDemand:100*Math.pow(x.agricultureOutput/100,c.employmentElasticity),industrialCost:100*Math.max(.25,1+c.costSensitivity*(energyCost/100-1)),agricultureCost:100*Math.max(.25,1+x.config.agricultureCostSensitivity*(energyCost/100-1)),agricultureChange:x.agricultureOutput-previousAgriculture};
     }
     var activity=economicActivity(p),employment=100-state.unemployment,targetEmployment=clamp(b.employment*Math.pow(activity/100,c.employmentElasticity),0,100);
+    targetEmployment=clamp(targetEmployment+sectorExpansionJobs(state)-(p.sectorEmploymentAtBaseline||0),0,100);
     if(typeof foreignInvestmentEmploymentBoost==='function')targetEmployment=clamp(targetEmployment+foreignInvestmentEmploymentBoost(state)-(p.fdiEmploymentAtBaseline||0),0,100);
     employment=economicApproach(employment,targetEmployment,c.employmentStep);state.unemployment=fiscalRound(100-employment);
     p.wageIndex=economicApproach(p.wageIndex,100*Math.pow(activity/100,c.wageElasticity),c.wageStep);
