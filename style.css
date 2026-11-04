@@ -1067,24 +1067,12 @@ select:focus, input:focus, textarea:focus {
 .muni-level-val { color: var(--accent-gold); font-weight: 800; }
 
 /* ---------- 22. EKRANI FILLESTAR ---------- */
-.start-screen { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; align-items: center; justify-content: center; }
+.start-screen { position: fixed; inset: 0; z-index: 10000; background: #080f20; display: flex; align-items: center; justify-content: center; }
 .start-screen.hidden { display: none; }
-.start-bg { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
-.start-bg-slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; animation: slideShow 18s infinite; }
-.start-bg-slide:nth-child(1) { animation-delay: 0s; }
-.start-bg-slide:nth-child(2) { animation-delay: 6s; }
-.start-bg-slide:nth-child(3) { animation-delay: 12s; }
-
-@keyframes slideShow {
-    0% { opacity: 0; }
-    5% { opacity: 0.5; }
-    30% { opacity: 0.5; }
-    35% { opacity: 0; }
-    100% { opacity: 0; }
-}
-
+.start-bg { position: absolute; inset: 0; z-index: 1; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, #1b2b48, #080f20 75%); }
 .start-overlay { position: absolute; inset: 0; background: radial-gradient(circle at center, transparent, #000 80%); z-index: 2; }
 .start-content { position: relative; z-index: 3; text-align: center; padding: 20px; width: 100%; max-width: 640px; }
+#startScreen .start-content, #startScreen .main-logo, #startScreen .start-buttons, #startScreen .start-btn { animation: none; animation-delay: 0s; opacity: 1; }
 .main-logo {
     display: block;
     margin: 0 auto 25px auto;
@@ -1116,8 +1104,7 @@ select:focus, input:focus, textarea:focus {
     font-size: 1.1rem;
     font-weight: 700;
     cursor: pointer;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s;
+    transition: background-color .15s, border-color .15s;
     margin: 6px 0;
     width: 280px;
     max-width: 100%;
@@ -1775,6 +1762,15 @@ button:focus-visible, [role="button"]:focus-visible, summary:focus-visible, a:fo
 
 /* Sector control rooms: recurring service quality vs. capital construction. */
 .sector-management-modal { max-width: 1240px; background: #0c172a; }
+#sectorManagementModal button { min-height: 44px; }
+.sector-expansion-description { color: var(--text-muted); overflow-wrap: anywhere; }
+.sector-expansion-effects { padding-inline-start: 18px; margin: 8px 0 12px; font-size: .78rem; line-height: 1.65; color: #c5d5eb; }
+.sector-expansion-effects li + li { margin-top: 4px; }
+.sector-expansion-summary { display: flex; flex-wrap: wrap; gap: 10px 20px; padding: 14px; margin: 0 0 18px; border: 1px solid #2a4161; border-radius: 10px; background: #132339; font-size: .78rem; line-height: 1.7; overflow-wrap: anywhere; }
+.sector-expansion-summary span { flex: 1 1 210px; min-width: 0; }
+#sectorExpansionDialog { width: min(540px,calc(100% - 24px)); max-height: calc(100dvh - 32px); overflow-y: auto; padding: 24px; color: #edf3ff; background: #101d32; border: 1px solid #af7b36; border-radius: 16px; }
+#sectorExpansionDialog::backdrop { background: rgb(0 0 0 / .72); }
+#sectorExpansionDialog .action-btn { display: block; width: 100%; min-height: 44px; white-space: normal; }
 .sector-control-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border-glass); padding-bottom: 18px; margin-bottom: 16px; }
 .sector-control-header h2 { margin: 8px 0 0; font-size: clamp(1.2rem,2vw,1.7rem); line-height: 1.4; }
 .sector-control-eyebrow { font-size: .68rem; letter-spacing: .07em; color: var(--accent-gold); }

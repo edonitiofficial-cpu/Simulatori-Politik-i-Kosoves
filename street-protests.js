@@ -3,7 +3,7 @@ const STREET_PROTEST_COSTS={POLICE:.002,NEGOTIATE:.005,IGNORE:0,COVERT:0,COURT:0
 function initializeStreetProtests(st){st.streetProtests={version:1,lastTurn:st.turnCount,counter:0,cooldownUntil:st.turnCount,seenLaws:st.laws.filter(function(l){return l.status==='PASSED';}).map(function(l){return l.id+':'+(l.version||1);}),events:[]};}
 function enableStreetProtests(){if(state.streetProtests)return false;return fiscalCommit(function(){initializeStreetProtests(state);});}
 function activeStreetProtest(st){return st.streetProtests?.events.find(function(p){return p.status==='ACTIVE';});}
-function streetSectorBlocked(sector,turn,st){if(typeof veteransCrisisPending==='function'&&veteransCrisisPending(st))return true;if(typeof unionOnStrike==='function'&&unionOnStrike(st,sector))return true;return !!sector && !!st.streetProtests?.events.some(function(p){return p.status==='IGNORED' && p.sectorId===sector && p.blockUntil!==null && turn>=p.resolvedTurn && turn<=p.blockUntil;});}
+function streetSectorBlocked(sector,turn,st){if(sectorExpansionOutage(st,sector,turn))return true;if(typeof veteransCrisisPending==='function'&&veteransCrisisPending(st))return true;if(typeof unionOnStrike==='function'&&unionOnStrike(st,sector))return true;return !!sector && !!st.streetProtests?.events.some(function(p){return p.status==='IGNORED' && p.sectorId===sector && p.blockUntil!==null && turn>=p.resolvedTurn && turn<=p.blockUntil;});}
 function createStreetProtest(reason,sectorId,lawId){
     if(oppositionPressurePaused(state)&&/opozit|opposition/i.test(reason))return false;
     var db=state.streetProtests;if(!db || activeStreetProtest(state) || state.turnCount<db.cooldownUntil)return false;

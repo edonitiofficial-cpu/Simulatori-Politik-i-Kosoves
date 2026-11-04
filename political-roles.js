@@ -73,7 +73,7 @@ function renderPoliticalRoleUI(){
     if(typeof renderStateEnterprises==='function')renderStateEnterprises();
     if(typeof renderIntelligenceAgency==='function')renderIntelligenceAgency();
     if(typeof renderNationalEmergencies==='function')renderNationalEmergencies();
-    if(typeof renderPopulation==='function')renderPopulation();renderLaborExodus();renderDinarCrisis();renderBureauBattle();renderPersonnelRegistry();renderHighwayProject();renderSovereignFund();renderTrepca();renderRTK();renderEnergyInquiry();
+    if(typeof renderPopulation==='function')renderPopulation();renderLaborExodus();renderDinarCrisis();renderBureauBattle();renderPersonnelRegistry();renderHighwayProject();renderSovereignFund();renderTrepca();renderRTK();renderEnergyInquiry();renderSectorExpansion();
     if(typeof renderDiaspora==='function')renderDiaspora();
     if(typeof renderUnions==='function')renderUnions();
     if(typeof renderSurvivalCrises==='function')renderSurvivalCrises();renderVeteransBudget();renderCoalitionBlackmail();

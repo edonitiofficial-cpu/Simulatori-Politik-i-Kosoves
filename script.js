@@ -1184,7 +1184,7 @@ function createFreshState(mode = "REALITY_OCT2026", chosenParty = "LVV", customI
     if(typeof migrateInformalEconomy==='function')migrateInformalEconomy(s);
     if(typeof migrateLocalObstructions==='function')migrateLocalObstructions(s);
     if(typeof migratePopulation==='function')migratePopulation(s);
-    if(typeof migrateStateEnterprises==='function')migrateStateEnterprises(s);migrateEnterpriseBoards(s);migrateSovereignFund(s);migrateTrepca(s);
+    if(typeof migrateStateEnterprises==='function')migrateStateEnterprises(s);migrateEnterpriseBoards(s);migrateSovereignFund(s);migrateTrepca(s);migrateSectorExpansion(s);
     if(typeof migrateNationalEmergencies==='function')migrateNationalEmergencies(s);
     if(typeof migrateGovernmentCrises==='function')migrateGovernmentCrises(s);
     if(typeof migrateOpposition==='function')migrateOpposition(s);
@@ -1897,8 +1897,10 @@ function migrateStateForDataFoundation(st) {
 
 function prepareLoadedState(rawState) {
     // Work on a detached copy: a failed validation/migration cannot damage the active game.
-    validateLoadedState(rawState);
     var loaded = JSON.parse(JSON.stringify(rawState));
+    // Extend old sector snapshots before validating their now-expanded key set.
+    if(loaded?.sectorManagement&&loaded.sectorManagement.expansion===undefined)migrateSectorExpansion(loaded);
+    validateLoadedState(loaded);
     runAllMigrations(loaded);reconcileAssociationUltimatum(loaded);
     validateLoadedState(loaded);
     return loaded;
@@ -2013,7 +2015,7 @@ function validateLoadedState(st) {
     if(typeof validateUnions==='function')validateUnions(st);
     if(typeof validateRogueMinisters==='function')validateRogueMinisters(st);
     validateCabinetManagement(st);validateInstitutionalConflicts(st);validateNorthCrisis(st);validateInternalPressure(st);validateMediaDossiers(st);validateCouncilEurope(st);validateWinterEnergy(st);validateGeneralStrike(st);validateMunicipalGrants(st);validateAssociationUltimatum(st);validateEnterpriseBoards(st);
-    if(typeof validateVeteransAudit==='function')validateVeteransAudit(st);validateVeteransBudget(st);validateCoalitionBlackmail(st);validateLaborExodus(st);validateDinarCrisis(st);validateBureauBattle(st);validatePersonnelRegistry(st);validateHighwayProject(st);validateHighwayElectionPolicies(st);validateSovereignFund(st);validateTrepca(st);validateRTK(st);validateEnergyInquiry(st);
+    if(typeof validateVeteransAudit==='function')validateVeteransAudit(st);validateVeteransBudget(st);validateCoalitionBlackmail(st);validateLaborExodus(st);validateDinarCrisis(st);validateBureauBattle(st);validatePersonnelRegistry(st);validateHighwayProject(st);validateHighwayElectionPolicies(st);validateSovereignFund(st);validateTrepca(st);validateRTK(st);validateEnergyInquiry(st);validateSectorExpansion(st);
     if(typeof validateBrusselsSpecial==='function')validateBrusselsSpecial(st);
     if(typeof validateLocalElections==='function')validateLocalElections(st);
     if(typeof validateIMFCrisis==='function')validateIMFCrisis(st);
@@ -2215,7 +2217,7 @@ function runAllMigrations(st) {
     if(typeof migrateInformalEconomy==='function')migrateInformalEconomy(st);
     if(typeof migrateLocalObstructions==='function')migrateLocalObstructions(st);
     if(typeof migratePopulation==='function')migratePopulation(st);
-    if(typeof migrateStateEnterprises==='function')migrateStateEnterprises(st);migrateEnterpriseBoards(st);migrateSovereignFund(st);migrateTrepca(st);
+    if(typeof migrateStateEnterprises==='function')migrateStateEnterprises(st);migrateEnterpriseBoards(st);migrateSovereignFund(st);migrateTrepca(st);migrateSectorExpansion(st);
     if(typeof migrateNationalEmergencies==='function')migrateNationalEmergencies(st);
     if(typeof migrateGovernmentCrises==='function')migrateGovernmentCrises(st);
     if(typeof migrateOpposition==='function')migrateOpposition(st);
@@ -2283,14 +2285,13 @@ function initApp() {
             state = loaded;
 
             document.getElementById("setupModal").classList.remove("show");
-            refreshAllUI();
             document.getElementById('continueLocalGameBtn').hidden = false;
             showStartScreen();
             return;
         } catch (e) { reportSaveError(e); return; }
     }
     state = createFreshState("REALITY_OCT2026", "LVV");
-    refreshAllUI();
+    // Render the game when the player continues/starts/loads, not behind the splash.
     showStartScreen();
 }
 
@@ -7954,7 +7955,7 @@ function processExistingTimeAdvance(weeksCount, silentToast) {
 
         processCouncilWeek(state.turnCount);processWinterEnergyWeek(state.turnCount);processGeneralStrikeWeek(state.turnCount);processMunicipalGrantsWeek(state.turnCount);
         if(typeof processBrusselsSpecialWeek==='function')processBrusselsSpecialWeek(state.turnCount);processAssociationUltimatumWeek(state.turnCount);
-        processEnergyInquiryWeek(state.turnCount);processRTKWeek(state.turnCount);processTrepcaWeek(state.turnCount);processSovereignWeek(state.turnCount);processHighwayWeek(state.turnCount);processDinarWeek(state.turnCount);processNorthWeek(state.turnCount);
+        processSectorExpansionWeek(state.turnCount);processEnergyInquiryWeek(state.turnCount);processRTKWeek(state.turnCount);processTrepcaWeek(state.turnCount);processSovereignWeek(state.turnCount);processHighwayWeek(state.turnCount);processDinarWeek(state.turnCount);processNorthWeek(state.turnCount);
         if(typeof processDiasporaWeek==='function')processDiasporaWeek(state.turnCount);
         if(typeof processTaxAdministrationWeek==='function')processTaxAdministrationWeek(state.turnCount);
         processLaborExodusWeek(state.turnCount);if(typeof processPopulationWeek==='function')processPopulationWeek(state.turnCount);

@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Republika: Simulatori Politik i Kosovës (VisionOS Edition)</title>
+    <link rel="preload" as="image" type="image/png" href="./assets/logo.png" fetchpriority="high">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#080f20">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Republika">
-    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <!-- LOGOT PWA: ruaji në të njëjtin folder me index.html.
          logo.png = 180x180 px (iPhone/iPad), icon-192.png = 192x192 px,
-         icon-512.png = 512x512 px (Android/PWA). Përdor PNG katror me sfond solid.
-         Ikonat fillestare R mund t'i zëvendësosh me logon tënde, me këta emra/madhësi.
+         icon-512.png = 512x512 px (Android/PWA, me transparencë).
+         Burimi zyrtar transparent: assets/logo.png. Për ikonat nga i njëjti burim:
+         node tools/generate-pwa-icons.cjs [rruga/e/logos-transparente.png]
+         Splash ruan transparencën; ikonat iOS vendosen mbi ngjyrën e aplikacionit.
          Pas ndryshimit të logos/kodit, rrit CACHE_VERSION te service-worker.js.
          manifest.json është JSON: komentet/instruksionet mbahen këtu, jo brenda tij.
          Instalimi kërkon HTTPS në publikim; localhost punon për testim. -->
@@ -33,14 +38,11 @@
      ============================================================ -->
 <div id="startScreen" class="start-screen">
     <div class="start-bg">
-        <div class="start-bg-slide" style="background-image: url('images/kuvendi.jpg');"></div>
-        <div class="start-bg-slide" style="background-image: url('images/qeveria.jpg');"></div>
-        <div class="start-bg-slide" style="background-image: url('images/konferenca.jpg');"></div>
     </div>
     <div class="start-overlay"></div>
     
     <div class="start-content" id="startMenuContent">
-        <img src="./assets/logo.png" alt="Republika - Simulatori Politik" class="main-logo">
+        <img src="./assets/logo.png" alt="Republika - Simulatori Politik" class="main-logo" width="1200" height="675" loading="eager" fetchpriority="high" decoding="async">
         <p class="start-description">Udhëhiqe vendin përmes Kuvendit, Qeverisë, 38 Komunave dhe diplomacisë ndërkombëtare.</p>
         
         <div class="start-buttons">
@@ -974,49 +976,51 @@
 <div id="weekTransitionOverlay" class="state-transition-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Kalimi dhe përmbledhja e javës" aria-live="polite"></div>
 <aside id="governmentNotificationToast" class="gov-notice-toast" role="status" aria-live="polite" aria-atomic="true" hidden></aside>
 <dialog id="governmentNotificationDialog" class="gov-notice-dialog" aria-labelledby="governmentNotificationTitle" aria-describedby="governmentNotificationMessage"></dialog>
-<script src="candidate-lists.js"></script>
-<script src="ui-details.js"></script>
-<script src="media-reporting.js"></script>
-<script src="brochure-data.js"></script>
-<script src="brochure.js"></script>
-<script src="candidates.js"></script>
-<script src="campaign.js"></script>
-<script src="election-day.js"></script>
-<script src="assembly-allocation.js"></script>
-<script src="assembly-publication.js"></script>
-<script src="constituent-session.js"></script>
-<script src="election-access.js"></script>
-<script src="deputy-mandates.js"></script>
-<script src="international-diplomacy.js"></script>
-<script src="agreement-documents.js"></script>
-<script src="diplomatic-report.js"></script>
-<script src="meeting-visuals.js"></script>
-<script src="state-calendar.js"></script>
-<script src="municipal-development.js"></script>
-<script src="state-development.js"></script>
-<script src="catalog-view.js"></script>
-<script src="urgent-situations.js"></script>
-<script src="election-preparation.js"></script>
-<script src="election-counting.js"></script>
-<script src="public-support.js"></script>
-<script src="political-roles.js"></script>
-<script src="presidency.js"></script>
-<script src="economic-pilot.js"></script>
-<script src="public-finance.js"></script>
-<script src="finance-extension.js"></script>
-<script src="weekly-agenda.js"></script>
-<script src="law-negotiations.js"></script>
-<script src="script.js"></script>
-<script src="sector-laws.js"></script>
-<script src="ux-guidance.js"></script>
-<script src="mandate-experience.js"></script>
-<script src="constitution-dark-politics.js"></script>
-<script src="street-protests.js"></script>
-<script src="security-ops.js"></script>
-<script src="foreign-investments-legacy.js"></script>
-<script src="investor-database.js"></script>
-<script src="foreign-investments.js"></script>
-<script src="sector-management.js"></script>
+<script src="candidate-lists.js" defer></script>
+<script src="ui-details.js" defer></script>
+<script src="media-reporting.js" defer></script>
+<script src="brochure-data.js" defer></script>
+<script src="brochure.js" defer></script>
+<script src="candidates.js" defer></script>
+<script src="campaign.js" defer></script>
+<script src="election-day.js" defer></script>
+<script src="assembly-allocation.js" defer></script>
+<script src="assembly-publication.js" defer></script>
+<script src="constituent-session.js" defer></script>
+<script src="election-access.js" defer></script>
+<script src="deputy-mandates.js" defer></script>
+<script src="international-diplomacy.js" defer></script>
+<script src="agreement-documents.js" defer></script>
+<script src="diplomatic-report.js" defer></script>
+<script src="meeting-visuals.js" defer></script>
+<script src="state-calendar.js" defer></script>
+<script src="municipal-development.js" defer></script>
+<script src="state-development.js" defer></script>
+<script src="catalog-view.js" defer></script>
+<script src="urgent-situations.js" defer></script>
+<script src="election-preparation.js" defer></script>
+<script src="election-counting.js" defer></script>
+<script src="public-support.js" defer></script>
+<script src="political-roles.js" defer></script>
+<script src="presidency.js" defer></script>
+<script src="economic-pilot.js" defer></script>
+<script src="public-finance.js" defer></script>
+<script src="finance-extension.js" defer></script>
+<script src="weekly-agenda.js" defer></script>
+<script src="law-negotiations.js" defer></script>
+<script src="script.js" defer></script>
+<script src="sector-laws.js" defer></script>
+<script src="ux-guidance.js" defer></script>
+<script src="mandate-experience.js" defer></script>
+<script src="constitution-dark-politics.js" defer></script>
+<script src="street-protests.js" defer></script>
+<script src="security-ops.js" defer></script>
+<script src="foreign-investments-legacy.js" defer></script>
+<script src="investor-database.js" defer></script>
+<script src="foreign-investments.js" defer></script>
+<script src="sector-management.js" defer></script>
+<script src="sector-expansion-data.js" defer></script>
+<script src="sector-expansion.js" defer></script>
 <button type="button" id="dashboardToolsButton" class="dashboard-tools-launcher" aria-haspopup="dialog" aria-controls="dashboardToolsSheet" aria-expanded="false"><span aria-hidden="true">⚙️</span><span>Mjetet</span></button>
 <dialog id="dashboardToolsSheet" class="dashboard-tools-sheet" aria-labelledby="dashboardToolsTitleMobile">
     <div class="dashboard-sheet-header">
@@ -1025,71 +1029,71 @@
     </div>
     <div id="dashboardToolsSheetContent"></div>
 </dialog>
-<script src="responsive-ui.js"></script>
+<script src="responsive-ui.js" defer></script>
 <div id="coalitionDemandModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="coalitionDemandTitle"><div class="modal-box" id="coalitionDemandContent"></div></div>
-<script src="coalition-dynamics.js"></script>
-<script src="coalition-blackmail.js"></script>
-<script src="opposition-logic.js"></script>
+<script src="coalition-dynamics.js" defer></script>
+<script src="coalition-blackmail.js" defer></script>
+<script src="opposition-logic.js" defer></script>
 <dialog id="governmentScandalDialog" class="government-scandal-dialog" aria-labelledby="governmentScandalTitle"><div id="governmentScandalContent"></div></dialog>
 <div id="crisisPressModal" class="modal-overlay" role="dialog" aria-modal="true"><div id="crisisPressContent" class="modal-box"></div></div>
-<script src="government-crises.js"></script>
-<script src="diplomacy-dashboard.js"></script>
-<script src="constitutional-court.js"></script>
-<script src="interest-groups.js"></script>
-<script src="electoral-promises.js"></script>
+<script src="government-crises.js" defer></script>
+<script src="diplomacy-dashboard.js" defer></script>
+<script src="constitutional-court.js" defer></script>
+<script src="interest-groups.js" defer></script>
+<script src="electoral-promises.js" defer></script>
 <div id="enterpriseDecisionModal" class="modal-overlay" role="dialog" aria-modal="true"><div id="enterpriseDecisionContent" class="modal-box"></div></div>
 <dialog id="nationalEmergencyDialog" class="national-emergency-dialog" aria-labelledby="nationalEmergencyTitle"><div id="nationalEmergencyContent"></div></dialog>
-<script src="state-enterprises.js"></script>
-<script src="intelligence-agency.js"></script>
-<script src="national-emergencies.js"></script>
-<script src="population.js"></script>
-<script src="labor-exodus.js"></script>
+<script src="state-enterprises.js" defer></script>
+<script src="intelligence-agency.js" defer></script>
+<script src="national-emergencies.js" defer></script>
+<script src="population.js" defer></script>
+<script src="labor-exodus.js" defer></script>
 <dialog id="localObstructionDialog" class="government-scandal-dialog" aria-labelledby="localObstructionTitle"><div id="localObstructionContent"></div></dialog>
-<script src="diaspora.js"></script>
-<script src="law-implementation.js"></script>
-<script src="unions.js"></script>
-<script src="security-crises.js"></script>
-<script src="imf-crisis.js"></script>
-<script src="media-warfare.js"></script>
-<script src="local-candidates-data.js"></script>
-<script src="local-elections.js"></script>
-<script src="brussels-special.js"></script>
-<script src="rogue-ministers.js"></script>
-<script src="veterans-audit.js"></script>
-<script src="veterans-budget.js"></script>
-<script src="survival-crises-ui.js"></script>
-<script src="cabinet-management.js"></script>
-<script src="institutional-conflicts.js"></script>
-<script src="diaspora-mobilization.js"></script>
-<script src="north-crisis.js"></script>
-<script src="dinar-crisis.js"></script>
-<script src="internal-pressure.js"></script>
-<script src="media-dossiers.js"></script>
-<script src="media-bomb.js"></script>
-<script src="highway-project.js"></script>
-<script src="sovereign-fund.js"></script>
-<script src="trepca-strike.js"></script>
-<script src="rtk-battle.js"></script>
-<script src="energy-inquiry.js"></script>
-<script src="council-europe.js"></script>
-<script src="winter-energy.js"></script>
-<script src="general-strike.js"></script>
-<script src="municipal-grants.js"></script>
-<script src="association-ultimatum.js"></script>
-<script src="enterprise-boards.js"></script>
-<script src="personnel-data.js"></script>
-<script src="personnel-registry.js"></script>
+<script src="diaspora.js" defer></script>
+<script src="law-implementation.js" defer></script>
+<script src="unions.js" defer></script>
+<script src="security-crises.js" defer></script>
+<script src="imf-crisis.js" defer></script>
+<script src="media-warfare.js" defer></script>
+<script src="local-candidates-data.js" defer></script>
+<script src="local-elections.js" defer></script>
+<script src="brussels-special.js" defer></script>
+<script src="rogue-ministers.js" defer></script>
+<script src="veterans-audit.js" defer></script>
+<script src="veterans-budget.js" defer></script>
+<script src="survival-crises-ui.js" defer></script>
+<script src="cabinet-management.js" defer></script>
+<script src="institutional-conflicts.js" defer></script>
+<script src="diaspora-mobilization.js" defer></script>
+<script src="north-crisis.js" defer></script>
+<script src="dinar-crisis.js" defer></script>
+<script src="internal-pressure.js" defer></script>
+<script src="media-dossiers.js" defer></script>
+<script src="media-bomb.js" defer></script>
+<script src="highway-project.js" defer></script>
+<script src="sovereign-fund.js" defer></script>
+<script src="trepca-strike.js" defer></script>
+<script src="rtk-battle.js" defer></script>
+<script src="energy-inquiry.js" defer></script>
+<script src="council-europe.js" defer></script>
+<script src="winter-energy.js" defer></script>
+<script src="general-strike.js" defer></script>
+<script src="municipal-grants.js" defer></script>
+<script src="association-ultimatum.js" defer></script>
+<script src="enterprise-boards.js" defer></script>
+<script src="personnel-data.js" defer></script>
+<script src="personnel-registry.js" defer></script>
 <dialog id="northQuintDialog" class="government-scandal-dialog" aria-label="Barrikadat dhe QUINT-i"><div id="northQuintContent"></div></dialog>
 <dialog id="diasporaMobilizationDialog" class="government-scandal-dialog" aria-label="Ardhja e Mërgatës"><div id="diasporaMobilizationContent"></div></dialog>
 <dialog id="institutionalConflictDialog" class="government-scandal-dialog" aria-label="Krizë institucionale"><div id="institutionalConflictContent"></div></dialog>
 <dialog id="survivalDecisionDialog" class="government-scandal-dialog" aria-label="Vendim urgjent"><div id="survivalDecisionContent"></div></dialog>
 <dialog id="brusselsDecisionDialog" class="government-scandal-dialog" aria-label="Vendim institucional"><div id="brusselsDecisionContent"></div></dialog>
 <dialog id="imfCrisisDialog" class="government-scandal-dialog" aria-label="Kriza Financiare"><div id="imfCrisisContent"></div></dialog>
-<script src="justice-reform.js"></script>
-<script src="informal-economy.js"></script>
-<script src="local-obstructions.js"></script>
-<script src="pwa-registration.js"></script>
-<script src="government-notifications.js"></script>
+<script src="justice-reform.js" defer></script>
+<script src="informal-economy.js" defer></script>
+<script src="local-obstructions.js" defer></script>
+<script src="pwa-registration.js" defer></script>
+<script src="government-notifications.js" defer></script>
 <script type="module">
     // Dynamic CDN imports keep guest play working even when Firebase cannot load.
     try {

@@ -1,7 +1,7 @@
 /* Public funding complements the existing covert security operations. */
 const INTELLIGENCE_PLANS={1:{costB:.002,chance:.25},2:{costB:.005,chance:.5},3:{costB:.01,chance:.75}};
 function intelligenceAuthoritarian(st){return (st||state)?.securityOps?.agency?.authoritarianism||0;}
-function foreignFundingBlocked(st){return associationTotalSanctions(st||state)||northSanctioned(st||state)||intelligenceAuthoritarian(st)>=60||(typeof internationalIsolation==='function'&&internationalIsolation(st||state));}
+function foreignFundingBlocked(st){return sectorExpansionCoal(st||state)||associationTotalSanctions(st||state)||northSanctioned(st||state)||intelligenceAuthoritarian(st)>=60||(typeof internationalIsolation==='function'&&internationalIsolation(st||state));}
 function registerIntelligenceCovertUse(operation){var a=intelligenceAgencyEnsure(state);a.actions.push({seq:++a.counter,kind:'COVERT',turn:state.turnCount,operationId:operation.id});a.authoritarianism=Math.min(100,a.authoritarianism+10);}
 function intelligenceAgencyEnsure(st){
     if(!st.securityOps)st.securityOps=createSecurityOpsState(st);

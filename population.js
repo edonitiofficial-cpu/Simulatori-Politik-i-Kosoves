@@ -15,7 +15,7 @@ function populationWorkerReason(jobs,st){st=st||state;var available=populationAv
 function processPopulationWeek(turn){
     migratePopulation(state);var p=state.population;if(turn<=p.lastTurn)return 0;
     if(turn!==p.lastTurn+1)throw Error('Popullsia kërkon javë të njëpasnjëshme.');
-    var stress=Math.max(0,40-state.approval)*.00004+Math.max(0,state.unemployment-POPULATION_HIGH_UNEMPLOYMENT)*.00005,rate=laborExodusStopped(state)?0:Math.min(.0025,stress),before=p.citizens;
+    var stress=Math.max(0,40-state.approval)*.00004+Math.max(0,state.unemployment-POPULATION_HIGH_UNEMPLOYMENT)*.00005,rate=laborExodusStopped(state)?0:Math.min(.0025,stress)*sectorExpansionMigrationFactor(state),before=p.citizens;
     var loss=rate>0?Math.min(before-1,Math.max(1,Math.floor(before*rate))):0;
     p.citizens-=loss;p.emigrated+=loss;p.lastEmigrants=loss;p.lastTurn=turn;p.history.push({turn,before,after:p.citizens,lost:loss});p.history=p.history.slice(-48);return loss;
 }

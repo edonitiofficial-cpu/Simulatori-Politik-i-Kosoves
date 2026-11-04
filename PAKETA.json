@@ -1,6 +1,6 @@
 {
   "generated": "2026-11-04",
-  "cacheVersion": "v36",
+  "cacheVersion": "v39",
   "files": [
     {
       "file": "agreement-documents.js",
@@ -16,6 +16,11 @@
       "file": "assembly-publication.js",
       "bytes": 27604,
       "sha256": "c70775fd7c499212dfd482cc8ff2cd17b295a2bb0f090f6ee3e25f072656ce99"
+    },
+    {
+      "file": "assets/logo.png",
+      "bytes": 356531,
+      "sha256": "10c36f58ef1170a4d20083abf15f07bbfa6e353cee4769dcfbd43bf9091dc37c"
     },
     {
       "file": "association-ultimatum.js",
@@ -94,8 +99,8 @@
     },
     {
       "file": "council-europe.js",
-      "bytes": 10295,
-      "sha256": "be80236fa0e880f087800bfa8735bc47ee5b24ed3b69ec54da13a4c6d5baa3b7"
+      "bytes": 10349,
+      "sha256": "31795c00e538bd61e38bfb2ca404dd57df3433967c9745e3084b4aba8576d0a9"
     },
     {
       "file": "data/143_Broshura_alsr.pdf",
@@ -279,8 +284,8 @@
     },
     {
       "file": "economic-pilot.js",
-      "bytes": 65917,
-      "sha256": "fd2e7fdd69d005137310c16b862410537b0dafe31652b2e838cecb33ff7dc823"
+      "bytes": 66251,
+      "sha256": "192e904c1317c6e994f3760d0229b869356a413ccb55473c0119b912855dac6d"
     },
     {
       "file": "election-access.js",
@@ -344,8 +349,8 @@
     },
     {
       "file": "government-crises.js",
-      "bytes": 14840,
-      "sha256": "1bb3de37d969bfd967c5f5616e8d9c8b7c62bb179d0430e8bcfbc1bbbf1a12b5"
+      "bytes": 14868,
+      "sha256": "eb22271c39e96e27fa54f26ac15d3bbc4e80844dcf19a98566b526629c1303f3"
     },
     {
       "file": "government-notifications.js",
@@ -359,13 +364,13 @@
     },
     {
       "file": "icon-192.png",
-      "bytes": 14045,
-      "sha256": "20f8aa5143afcb1bdb8c28fd66d0f0237ad17d60e138d2f2b024fca0249c0d30"
+      "bytes": 16171,
+      "sha256": "ffb2a3f20fe76ae33420aa91dab26d4e7fbe02e07f7f21274edcc2674d5b9a33"
     },
     {
       "file": "icon-512.png",
-      "bytes": 66682,
-      "sha256": "fe73a130e7989fff04632f03a0ea724495d32d15a1b3fc769f06ffbf1eab42b6"
+      "bytes": 76487,
+      "sha256": "992850f7b7181231208d71828a6d8ffa036d73f63d1134b41959efed419c3ccd"
     },
     {
       "file": "imf-crisis.js",
@@ -374,13 +379,13 @@
     },
     {
       "file": "index.html",
-      "bytes": 85525,
-      "sha256": "efe52a737bcfa4f297934a702b86d64fc5e151b22d65a27bf2b9cc67d77d32d2"
+      "bytes": 86399,
+      "sha256": "9966f7f84459eb224250044edfd3e8275075fae04a9455a16edb0a83f08290b2"
     },
     {
       "file": "informal-economy.js",
-      "bytes": 3243,
-      "sha256": "56a1761f10c98a447b073f7862bfcde076eaeebd20d2dfad1e7db807ed9d834c"
+      "bytes": 3239,
+      "sha256": "231ddb9c6029a3b4df1a4a46a0b026b665e43c33b8a29d9bd212a47377413e4d"
     },
     {
       "file": "institutional-conflicts.js",
@@ -389,8 +394,8 @@
     },
     {
       "file": "intelligence-agency.js",
-      "bytes": 9320,
-      "sha256": "980923cfc432069bf629eb48193eb9da18b1a64c03047d6a157600e8b568f23c"
+      "bytes": 9352,
+      "sha256": "d67d8db74d6517f4e68933ae3b92f8abb778d8f924bb7c12291db93c6255cad3"
     },
     {
       "file": "interest-groups.js",
@@ -399,8 +404,8 @@
     },
     {
       "file": "internal-pressure.js",
-      "bytes": 11333,
-      "sha256": "11038cb0d288645d54f05fa3d7b1a5fd7dc53f1f8b32479624e2f2622c3e74fc"
+      "bytes": 11399,
+      "sha256": "6b145d7cfd5952a4bd7ffbfbc3f73a842d0b0c1bdd1193cb32d1eaac7e0281e2"
     },
     {
       "file": "international-diplomacy.js",
@@ -454,8 +459,8 @@
     },
     {
       "file": "logo.png",
-      "bytes": 12982,
-      "sha256": "86e1b03ce209c22589a4e669902d3db9993531803e4fc16a38e0962eb1a12e0e"
+      "bytes": 10852,
+      "sha256": "8b452b84c3f4f1ad376ea1fd5cab4a9b2b2100dc4c2c6266718e095970c897e0"
     },
     {
       "file": "mandate-experience.js",
@@ -474,8 +479,8 @@
     },
     {
       "file": "media-dossiers.js",
-      "bytes": 9475,
-      "sha256": "542e3cc72ee1231f3a17a7273e8c8f7a35cd3e846c1a4ca6f32c4a60be3614d4"
+      "bytes": 9674,
+      "sha256": "b96f0ffdf34344768633a7eeaca6e0f3805fcc7a2ff396295e82165325a62d9f"
     },
     {
       "file": "media-reporting.js",
@@ -529,13 +534,13 @@
     },
     {
       "file": "political-roles.js",
-      "bytes": 14337,
-      "sha256": "875304cac4a0fd8880624e69876e6774604f8c2ec33ef404c546fd8cbaf777c0"
+      "bytes": 14361,
+      "sha256": "5d7a42c8654248928604677d87f73c5ae14cb428fa4c9b7755c049eb6c1f89c0"
     },
     {
       "file": "population.js",
-      "bytes": 4640,
-      "sha256": "d8e7458dfce6afc70c918351cae108b0729aa0df1c5c6844825c5495aa9d9853"
+      "bytes": 4678,
+      "sha256": "633fa28be13eed21689b23fb3ce6f4d96c90da55ec5dc08bb21ab9ae3212d3c6"
     },
     {
       "file": "presidency.js",
@@ -544,8 +549,8 @@
     },
     {
       "file": "public-finance.js",
-      "bytes": 60092,
-      "sha256": "09a814c5fa46b0b7af7d65690e095600f53079cb0438153bb2e0052bc87f2a6d"
+      "bytes": 61263,
+      "sha256": "ec28556eb87fcf5c530fc99525e0165272258cf64f0812ecf07d3e2d6e3137b7"
     },
     {
       "file": "public-support.js",
@@ -554,8 +559,8 @@
     },
     {
       "file": "pwa-icon.svg",
-      "bytes": 611,
-      "sha256": "7482bf91ca14a99bfc69d2e43af9c150bf3462d207914ec220d3b2578086e856"
+      "bytes": 102141,
+      "sha256": "ed18d7ac584109fc74025bebe91e158e3914b5974e4cea9ad0672b3a33c904f7"
     },
     {
       "file": "pwa-registration.js",
@@ -579,8 +584,18 @@
     },
     {
       "file": "script.js",
-      "bytes": 556390,
-      "sha256": "4ccb027945c29698616da784b622d3f9d5db650f4fa8c41bff633fa1fced88d7"
+      "bytes": 556743,
+      "sha256": "0a9952936a3c8979df31b43bb6841aa4ddb5c18034958b7304ac4f4d979c4bbb"
+    },
+    {
+      "file": "sector-expansion-data.js",
+      "bytes": 11582,
+      "sha256": "c15fee88f241b8cd38fff658ba8e89413ffa99c650e5b31f905adc3f6034f946"
+    },
+    {
+      "file": "sector-expansion.js",
+      "bytes": 24328,
+      "sha256": "13a8a255b1cc25ca89a9cc29cc7bdbbd826f0aadbf0f752069ad2a23037b7925"
     },
     {
       "file": "sector-laws.js",
@@ -589,13 +604,13 @@
     },
     {
       "file": "sector-management.js",
-      "bytes": 33570,
-      "sha256": "a042ccab52b9b7e5b29a331cf7aa49a58138407aad2f0f2043d5260ddb6cfd19"
+      "bytes": 34646,
+      "sha256": "428769c781ab869345eeef02b2f5c409ebb56bcffc990e8029dd7f50a017c15f"
     },
     {
       "file": "security-crises.js",
-      "bytes": 11243,
-      "sha256": "2b446784dae5ae1a0f312c1ec2f9b076487f3afcccfddcc8cde519310ac405ed"
+      "bytes": 11277,
+      "sha256": "00a08ec0781957cdcc31c45dfc7ce3b600aa924a3822b9880a29ae959aacc42e"
     },
     {
       "file": "security-ops.js",
@@ -604,8 +619,8 @@
     },
     {
       "file": "service-worker.js",
-      "bytes": 5067,
-      "sha256": "cca14785d6728d384dc5efb88e1c34291ccb8ac7df62992a9bdc704f2308a4de"
+      "bytes": 5361,
+      "sha256": "b3d39b96a192c51d28632f148d3d3e253d1dd48dcd36df6c19cf637fcdc99b1b"
     },
     {
       "file": "sovereign-fund.js",
@@ -629,13 +644,13 @@
     },
     {
       "file": "street-protests.js",
-      "bytes": 11706,
-      "sha256": "4ef3a12321bcf08610a50581a0313f6d9b3413bf47d84ee6c83126f9f42b33c1"
+      "bytes": 11759,
+      "sha256": "930a07a80498e4f604d636366e79c635b2431931cd630df4e96a01b51fefe551"
     },
     {
       "file": "style.css",
-      "bytes": 134946,
-      "sha256": "3288cfc4f83d0d106f08c1aca1d90e0f9ff4525f68c8f27792f168b0e5a75ae5"
+      "bytes": 135734,
+      "sha256": "9f4438b4646a337b21f05fc72642c6f09939fb2bb276c5d89b7f9a2cd1f82207"
     },
     {
       "file": "survival-crises-ui.js",
@@ -669,8 +684,8 @@
     },
     {
       "file": "veterans-audit.js",
-      "bytes": 9394,
-      "sha256": "4ca0c76684930c6c2f600b0fdfd3cd3cafac70d7f603e183c2167918ef6f6402"
+      "bytes": 9419,
+      "sha256": "8116e528b9f9c408769429a0ea79a569147882b1dab8b0d8cb8bc476b044b6b7"
     },
     {
       "file": "veterans-budget.js",
@@ -684,8 +699,8 @@
     },
     {
       "file": "winter-energy.js",
-      "bytes": 10436,
-      "sha256": "90b2bc052fd1312fc71992dc778bc86871c1eb2ac134910b84812939f0995690"
+      "bytes": 11104,
+      "sha256": "710ad970a13c49b729e07eda829eff3621e0c8dee1edf5380b78810c8e851679"
     }
   ]
 }

@@ -2,7 +2,7 @@
    Keep CORE_ASSETS aligned with local script dependencies in index.html.
    Cache only this game's static shell. Never cache Auth, Firestore or user saves.
    The next version activates after all windows using the previous version close. */
-const CACHE_VERSION='v36';
+const CACHE_VERSION='v39';
 const CACHE_PREFIX='republika-shell:'+self.registration.scope+':';
 const CACHE_NAME=CACHE_PREFIX+CACHE_VERSION;
 const CORE_ASSETS=[
@@ -57,6 +57,8 @@ const CORE_ASSETS=[
     "./investor-database.js",
     "./foreign-investments.js",
     "./sector-management.js",
+    "./sector-expansion-data.js",
+    "./sector-expansion.js",
     "./responsive-ui.js",
     "./coalition-dynamics.js",
     "./coalition-blackmail.js",
@@ -119,7 +121,11 @@ const LANDING_LOGO_PATH=new URL('./assets/logo.png',self.registration.scope).pat
 ALLOWED_PATHS.add(LANDING_LOGO_PATH);
 const SCOPE_PATH=new URL(self.registration.scope).pathname;
 self.addEventListener('install',event=>{
-    event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE_URLS.map(url=>new Request(url,{cache:'reload'})))));
+    event.waitUntil(caches.open(CACHE_NAME).then(cache=>Promise.all([
+        cache.addAll(CORE_URLS.map(url=>new Request(url,{cache:'reload'}))),
+        // Prewarm the logo too; missing artwork must not prevent installation.
+        cache.add(new Request(new URL('./assets/logo.png',self.registration.scope).href,{cache:'reload'})).catch(()=>{})
+    ])));
 });
 self.addEventListener('activate',event=>{
     event.waitUntil((async()=>{
